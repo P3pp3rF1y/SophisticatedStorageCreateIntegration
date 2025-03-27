@@ -17,6 +17,7 @@ import net.minecraft.world.phys.Vec3;
 import net.p3pp3rf1y.sophisticatedcore.api.IStorageSavedData;
 import net.p3pp3rf1y.sophisticatedcore.api.IStorageWrapper;
 import net.p3pp3rf1y.sophisticatedcore.common.gui.SophisticatedMenuProvider;
+import net.p3pp3rf1y.sophisticatedcore.compat.create.ContraptionHelper;
 import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageContainerMenuBase;
 import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageData;
 import net.p3pp3rf1y.sophisticatedcore.util.NoopStorageWrapper;
@@ -66,7 +67,7 @@ public class MountedStorageHolder extends StorageHolderBase {
 	@Override
 	protected boolean isOwnContainer(Player player) {
 		if (player.containerMenu instanceof MountedStorageContainerMenu mountedStorageContainerMenu) {
-			return mountedStorageContainerMenu.getContraption().map(c -> c.entity == getEntity() &&
+			return mountedStorageContainerMenu.getContraptionEntity().map(c -> c == getEntity() &&
 					(mountedStorageContainerMenu.getLocalPos().equals(localPos) || mountedStorageContainerMenu.getLocalPos().equals(chestOtherPartPos))
 			).orElse(false);
 		}
@@ -236,7 +237,7 @@ public class MountedStorageHolder extends StorageHolderBase {
 	private Optional<MountedStorageHolder> getHolderOfOtherHalf(BlockPos otherHalfLocalPos) {
 		Entity e = getEntity();
 		if (e instanceof AbstractContraptionEntity abstractContraptionEntity
-				&& abstractContraptionEntity.getContraption().getStorage().getAllItemStorages().get(otherHalfLocalPos) instanceof MountedSophisticatedStorage mountedSophisticatedStorage) {
+				&& ContraptionHelper.getStorage(abstractContraptionEntity).getAllItemStorages().get(otherHalfLocalPos) instanceof MountedSophisticatedStorage mountedSophisticatedStorage) {
 			return Optional.of(mountedSophisticatedStorage.getStorageHolder());
 		}
 		return Optional.empty();

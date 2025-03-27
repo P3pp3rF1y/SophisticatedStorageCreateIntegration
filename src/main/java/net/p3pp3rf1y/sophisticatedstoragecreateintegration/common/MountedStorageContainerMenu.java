@@ -29,9 +29,9 @@ public class MountedStorageContainerMenu extends MountedStorageContainerMenuBase
 
 	public MountedStorageContainerMenu(MenuType<?> menuType, int containerId, Player player, int contraptionEntityId, BlockPos localPos) {
 		super(menuType, containerId, player, NoopStorageWrapper.INSTANCE, -1, false, contraptionEntityId, localPos);
-		getContraption().ifPresent(contraption -> {
+		getContraptionEntity().ifPresent(contraptionEntity -> {
 			if (mountedStorage instanceof MountedSophisticatedStorage mountedSophisticatedStorage) {
-				mountedSophisticatedStorage.getStorageHolder().startOpen(player, contraption.entity);
+				mountedSophisticatedStorage.getStorageHolder().startOpen(player, contraptionEntity);
 			}
 		});
 	}
@@ -43,9 +43,9 @@ public class MountedStorageContainerMenu extends MountedStorageContainerMenuBase
 	@Override
 	public void removed(Player player) {
 		super.removed(player);
-		getContraption().ifPresent(contraption -> {
+		getContraptionEntity().ifPresent(contraptionEntity -> {
 			if (mountedStorage instanceof MountedSophisticatedStorage mountedSophisticatedStorage) {
-				mountedSophisticatedStorage.getStorageHolder().stopOpen(player, contraption.entity);
+				mountedSophisticatedStorage.getStorageHolder().stopOpen(player, contraptionEntity);
 			}
 		});
 	}

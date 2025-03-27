@@ -4,6 +4,7 @@ import com.simibubi.create.api.behaviour.movement.MovementBehaviour;
 import com.simibubi.create.content.contraptions.behaviour.MovementContext;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.Vec3;
+import net.p3pp3rf1y.sophisticatedcore.compat.create.ContraptionHelper;
 import org.jetbrains.annotations.Nullable;
 
 public class SophisticatedStorageMovementBehaviour implements MovementBehaviour {
@@ -25,7 +26,7 @@ public class SophisticatedStorageMovementBehaviour implements MovementBehaviour 
 	//TODO replace with direct call to context.getItemStorage once this is fixed for when storage is synced and new instance is created on client
 	@Nullable
 	private MountedSophisticatedStorage getMountedSophisticatedStorage(MovementContext context) {
-		if (context.contraption.getStorage().getAllItemStorages().get(context.localPos) instanceof MountedSophisticatedStorage mountedSophisticatedStorage) {
+		if (ContraptionHelper.getStorage(context.contraption.entity).getAllItemStorages().get(context.localPos) instanceof MountedSophisticatedStorage mountedSophisticatedStorage) {
 			return mountedSophisticatedStorage;
 		}
 
