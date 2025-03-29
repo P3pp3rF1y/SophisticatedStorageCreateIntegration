@@ -14,6 +14,7 @@ import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.p3pp3rf1y.sophisticatedstorage.SophisticatedStorage;
 import net.p3pp3rf1y.sophisticatedstorage.block.StorageBlockBase;
+import net.p3pp3rf1y.sophisticatedstoragecreateintegration.SophisticatedStorageCreateIntegration;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.common.MountedLimitedBarrelContainerMenu;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.common.MountedLimitedBarrelSettingsContainerMenu;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.common.MountedStorageContainerMenu;
@@ -24,7 +25,7 @@ import net.p3pp3rf1y.sophisticatedstoragecreateintegration.storage.Sophisticated
 import java.util.function.Supplier;
 
 public class ModContent {
-	private static final DeferredRegister<MenuType<?>> MENU_TYPES = DeferredRegister.create(BuiltInRegistries.MENU, SophisticatedStorage.MOD_ID);
+	private static final DeferredRegister<MenuType<?>> MENU_TYPES = DeferredRegister.create(BuiltInRegistries.MENU, SophisticatedStorageCreateIntegration.MOD_ID);
 
 	public static final DeferredRegister<MountedItemStorageType<?>> ITEM_STORAGE_TYPES = DeferredRegister.create(CreateBuiltInRegistries.MOUNTED_ITEM_STORAGE_TYPE, SophisticatedStorage.MOD_ID);
 

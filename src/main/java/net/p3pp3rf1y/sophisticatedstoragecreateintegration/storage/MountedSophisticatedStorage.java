@@ -36,6 +36,7 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.items.IItemHandlerModifiable;
 import net.p3pp3rf1y.sophisticatedcore.api.IStorageWrapper;
 import net.p3pp3rf1y.sophisticatedcore.common.gui.SortBy;
+import net.p3pp3rf1y.sophisticatedcore.compat.create.ContraptionHelper;
 import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageBase;
 import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageContainerMenuBase;
 import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageData;
@@ -174,7 +175,7 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 			return;
 		}
 
-		if (contraption.entity.level().isClientSide() && contraption.getActorAt(localPos).getValue().getItemStorage() instanceof MountedSophisticatedStorage mountedSophisticatedStorage) {
+		if (contraption.entity.level().isClientSide() && ContraptionHelper.getStorage(contraption.entity).getAllItemStorages().get(localPos) instanceof MountedSophisticatedStorage mountedSophisticatedStorage) {
 			mountedSophisticatedStorage.setStorageStack(getStorageStack());
 			mountedSophisticatedStorage.getStorageHolder().onStorageItemSynced();
 		}

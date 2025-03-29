@@ -200,8 +200,8 @@ public class MountedStorageHolder extends StorageHolderBase {
 		}
 	}
 
-	public void initEntityLevelAndPositions(AbstractContraptionEntity entity, BlockPos localPos, Level level, Vec3 position, BlockState state) {
-		setContraptionEntity(entity);
+	public void initEntityLevelAndPositions(AbstractContraptionEntity abstractContraptionEntity, BlockPos localPos, Level level, Vec3 position, BlockState state) {
+		setContraptionEntity(abstractContraptionEntity);
 		setLocalPos(localPos);
 		setLevel(level);
 		setPosition(position);
@@ -210,8 +210,7 @@ public class MountedStorageHolder extends StorageHolderBase {
 			chestOtherPartPos = localPos.relative(ChestBlock.getConnectedDirection(state));
 			isMainStorage = state.getValue(ChestBlock.TYPE) == ChestType.RIGHT;
 			if (!isMainStorage && level.isClientSide()) {
-				if (entity instanceof AbstractContraptionEntity abstractContraptionEntity
-						&& abstractContraptionEntity.getContraption().presentBlockEntities.get(localPos) instanceof ChestBlockEntity chestBlockEntity) {
+				if (abstractContraptionEntity.getContraption().presentBlockEntities.get(localPos) instanceof ChestBlockEntity chestBlockEntity) {
 					chestBlockEntity.setMainPos(chestOtherPartPos);
 				}
 			}
