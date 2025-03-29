@@ -3,10 +3,10 @@ package net.p3pp3rf1y.sophisticatedstoragecreateintegration.client;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
-import net.neoforged.neoforge.network.PacketDistributor;
 import net.p3pp3rf1y.sophisticatedcore.client.gui.utils.Position;
 import net.p3pp3rf1y.sophisticatedcore.common.gui.SettingsContainerMenu;
-import net.p3pp3rf1y.sophisticatedcore.compat.create.OpenMountedStorageInventoryPayload;
+import net.p3pp3rf1y.sophisticatedcore.compat.create.OpenMountedStorageInventoryMessage;
+import net.p3pp3rf1y.sophisticatedcore.network.PacketHandler;
 import net.p3pp3rf1y.sophisticatedcore.settings.StorageSettingsTabControlBase;
 import net.p3pp3rf1y.sophisticatedstorage.client.gui.StorageSettingsScreen;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.common.MountedStorageSettingsContainerMenu;
@@ -28,7 +28,7 @@ public class MountedStorageSettingsScreen extends StorageSettingsScreen {
 
 	@Override
 	protected void sendStorageInventoryScreenOpenMessage() {
-		PacketDistributor.sendToServer(new OpenMountedStorageInventoryPayload(entityId, localPos));
+		PacketHandler.INSTANCE.sendToServer(new OpenMountedStorageInventoryMessage(entityId, localPos));
 	}
 
 	public static MountedStorageSettingsScreen constructScreen(SettingsContainerMenu<?> screenContainer, Inventory inventory, Component title) {

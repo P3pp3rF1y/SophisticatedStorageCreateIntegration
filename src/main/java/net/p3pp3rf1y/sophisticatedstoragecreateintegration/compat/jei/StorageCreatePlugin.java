@@ -11,7 +11,6 @@ import mezz.jei.api.registration.IRecipeTransferRegistration;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.crafting.CraftingRecipe;
-import net.minecraft.world.item.crafting.RecipeHolder;
 import net.p3pp3rf1y.sophisticatedcore.compat.jei.CraftingContainerRecipeTransferHandlerBase;
 import net.p3pp3rf1y.sophisticatedcore.compat.jei.SettingsGhostIngredientHandler;
 import net.p3pp3rf1y.sophisticatedcore.compat.jei.StorageGhostIngredientHandler;
@@ -29,7 +28,7 @@ public class StorageCreatePlugin implements IModPlugin {
 
 	@Override
 	public ResourceLocation getPluginUid() {
-		return ResourceLocation.fromNamespaceAndPath(SophisticatedStorageCreateIntegration.MOD_ID, "default");
+		return new ResourceLocation(SophisticatedStorageCreateIntegration.MOD_ID, "default");
 	}
 
 	@Override
@@ -60,14 +59,14 @@ public class StorageCreatePlugin implements IModPlugin {
 	public void registerRecipeTransferHandlers(IRecipeTransferRegistration registration) {
 		IRecipeTransferHandlerHelper handlerHelper = registration.getTransferHelper();
 		IStackHelper stackHelper = registration.getJeiHelpers().getStackHelper();
-		registration.addRecipeTransferHandler(new CraftingContainerRecipeTransferHandlerBase<MountedStorageContainerMenu, RecipeHolder<CraftingRecipe>>(handlerHelper, stackHelper) {
+		registration.addRecipeTransferHandler(new CraftingContainerRecipeTransferHandlerBase<MountedStorageContainerMenu, CraftingRecipe>(handlerHelper, stackHelper) {
 			@Override
 			public Class<MountedStorageContainerMenu> getContainerClass() {
 				return MountedStorageContainerMenu.class;
 			}
 
 			@Override
-			public mezz.jei.api.recipe.RecipeType<RecipeHolder<CraftingRecipe>> getRecipeType() {
+			public mezz.jei.api.recipe.RecipeType<CraftingRecipe> getRecipeType() {
 				return RecipeTypes.CRAFTING;
 			}
 		}, RecipeTypes.CRAFTING);

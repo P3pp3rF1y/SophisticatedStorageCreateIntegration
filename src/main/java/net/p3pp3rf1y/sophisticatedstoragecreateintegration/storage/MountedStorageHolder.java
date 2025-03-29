@@ -3,8 +3,10 @@ package net.p3pp3rf1y.sophisticatedstoragecreateintegration.storage;
 import com.simibubi.create.content.contraptions.AbstractContraptionEntity;
 import com.simibubi.create.content.contraptions.behaviour.MovementContext;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -14,19 +16,19 @@ import net.minecraft.world.level.block.state.properties.ChestType;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.network.NetworkHooks;
 import net.p3pp3rf1y.sophisticatedcore.api.IStorageSavedData;
 import net.p3pp3rf1y.sophisticatedcore.api.IStorageWrapper;
-import net.p3pp3rf1y.sophisticatedcore.common.gui.SophisticatedMenuProvider;
 import net.p3pp3rf1y.sophisticatedcore.compat.create.ContraptionHelper;
 import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageContainerMenuBase;
 import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageData;
+import net.p3pp3rf1y.sophisticatedcore.util.NBTHelper;
 import net.p3pp3rf1y.sophisticatedcore.util.NoopStorageWrapper;
 import net.p3pp3rf1y.sophisticatedstorage.block.ChestBlock;
 import net.p3pp3rf1y.sophisticatedstorage.block.ChestBlockEntity;
 import net.p3pp3rf1y.sophisticatedstorage.block.StorageBlockEntity;
 import net.p3pp3rf1y.sophisticatedstorage.entity.MovingStorageWrapper;
 import net.p3pp3rf1y.sophisticatedstorage.entity.StorageHolderBase;
-import net.p3pp3rf1y.sophisticatedstorage.init.ModDataComponents;
 import net.p3pp3rf1y.sophisticatedstorage.item.StorageBlockItem;
 import net.p3pp3rf1y.sophisticatedstorage.upgrades.hopper.HopperUpgradeItem;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.common.MountedLimitedBarrelContainerMenu;
@@ -91,7 +93,7 @@ public class MountedStorageHolder extends StorageHolderBase {
 
 	@Override
 	protected boolean isLocked(ItemStack storageItem) {
-		return storageItem.getOrDefault(ModDataComponents.LOCKED, false);
+		return NBTHelper.getBoolean(storageItem, StorageHolderBase.LOCKED_TAG).orElse(false);
 	}
 
 	@Nullable
@@ -149,7 +151,7 @@ public class MountedStorageHolder extends StorageHolderBase {
 
 	@Override
 	protected void setLocked(boolean locked) {
-		getSyncedStorageStack().set(ModDataComponents.LOCKED, locked);
+		getSyncedStorageStack().getOrCreateTag().putBoolean(LOCKED_TAG, locked);
 	}
 
 	@Override
@@ -160,10 +162,10 @@ public class MountedStorageHolder extends StorageHolderBase {
 	@Override
 	protected void openMenu(Player player) {
 		@Nullable Entity e = getEntity();
-		if (e == null) {
+		if (e == null || !(player instanceof ServerPlayer serverPlayer)) {
 			return;
 		}
-		player.openMenu(new SophisticatedMenuProvider((w, p, pl) -> createMenu(w, pl, e.getId(), localPos), getSyncedStorageStack().getHoverName(), false),
+		NetworkHooks.openScreen(serverPlayer, new SimpleMenuProvider((w, p, pl) -> createMenu(w, pl, e.getId(), localPos), getSyncedStorageStack().getHoverName()),
 				buffer -> {
 					buffer.writeInt(e.getId());
 					buffer.writeBlockPos(localPos);
@@ -200,8 +202,8 @@ public class MountedStorageHolder extends StorageHolderBase {
 		}
 	}
 
-	public void initEntityLevelAndPositions(AbstractContraptionEntity entity, BlockPos localPos, Level level, Vec3 position, BlockState state) {
-		setContraptionEntity(entity);
+	public void initEntityLevelAndPositions(AbstractContraptionEntity abstractContraptionEntity, BlockPos localPos, Level level, Vec3 position, BlockState state) {
+		setContraptionEntity(abstractContraptionEntity);
 		setLocalPos(localPos);
 		setLevel(level);
 		setPosition(position);
@@ -210,8 +212,7 @@ public class MountedStorageHolder extends StorageHolderBase {
 			chestOtherPartPos = localPos.relative(ChestBlock.getConnectedDirection(state));
 			isMainStorage = state.getValue(ChestBlock.TYPE) == ChestType.RIGHT;
 			if (!isMainStorage && level.isClientSide()) {
-				if (entity instanceof AbstractContraptionEntity abstractContraptionEntity
-						&& abstractContraptionEntity.getContraption().presentBlockEntities.get(localPos) instanceof ChestBlockEntity chestBlockEntity) {
+				if (abstractContraptionEntity.getContraption().presentBlockEntities.get(localPos) instanceof ChestBlockEntity chestBlockEntity) {
 					chestBlockEntity.setMainPos(chestOtherPartPos);
 				}
 			}

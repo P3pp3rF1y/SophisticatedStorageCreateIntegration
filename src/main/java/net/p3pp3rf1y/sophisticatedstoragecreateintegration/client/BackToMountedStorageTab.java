@@ -2,11 +2,11 @@ package net.p3pp3rf1y.sophisticatedstoragecreateintegration.client;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.neoforged.neoforge.network.PacketDistributor;
 import net.p3pp3rf1y.sophisticatedcore.client.gui.Tab;
 import net.p3pp3rf1y.sophisticatedcore.client.gui.controls.ImageButton;
 import net.p3pp3rf1y.sophisticatedcore.client.gui.utils.*;
-import net.p3pp3rf1y.sophisticatedcore.compat.create.OpenMountedStorageInventoryPayload;
+import net.p3pp3rf1y.sophisticatedcore.compat.create.OpenMountedStorageInventoryMessage;
+import net.p3pp3rf1y.sophisticatedcore.network.PacketHandler;
 import net.p3pp3rf1y.sophisticatedstorage.client.gui.StorageTranslationHelper;
 
 public class BackToMountedStorageTab extends Tab {
@@ -24,6 +24,6 @@ public class BackToMountedStorageTab extends Tab {
 
 	@Override
 	protected void onTabIconClicked(int button) {
-		PacketDistributor.sendToServer(new OpenMountedStorageInventoryPayload(contraptionEntityId, localPos));
+		PacketHandler.INSTANCE.sendToServer(new OpenMountedStorageInventoryMessage(contraptionEntityId, localPos));
 	}
 }
