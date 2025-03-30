@@ -26,7 +26,7 @@ public class SophisticatedStorageMovementBehaviour implements MovementBehaviour 
 	//TODO replace with direct call to context.getItemStorage once this is fixed for when storage is synced and new instance is created on client
 	@Nullable
 	private MountedSophisticatedStorage getMountedSophisticatedStorage(MovementContext context) {
-		if (ContraptionHelper.getStorage(context.contraption.entity).getAllItemStorages().get(context.localPos) instanceof MountedSophisticatedStorage mountedSophisticatedStorage) {
+		if (ContraptionHelper.getMountedStorage(context.contraption.entity, context.localPos) instanceof MountedSophisticatedStorage mountedSophisticatedStorage) {
 			return mountedSophisticatedStorage;
 		}
 
