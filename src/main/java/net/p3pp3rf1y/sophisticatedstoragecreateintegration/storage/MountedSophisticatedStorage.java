@@ -30,6 +30,7 @@ import net.p3pp3rf1y.sophisticatedcore.compat.create.ContraptionHelper;
 import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageBase;
 import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageContainerMenuBase;
 import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageData;
+import net.p3pp3rf1y.sophisticatedcore.settings.itemdisplay.ItemDisplaySettingsCategory;
 import net.p3pp3rf1y.sophisticatedcore.upgrades.UpgradeItemBase;
 import net.p3pp3rf1y.sophisticatedcore.util.NBTHelper;
 import net.p3pp3rf1y.sophisticatedcore.util.WorldHelper;
@@ -102,6 +103,8 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 			}
 		}
 
+		storage.getStorageWrapper().getSettingsHandler().getTypeCategory(ItemDisplaySettingsCategory.class).itemsChanged(); //update slot counts and fill levels
+
 		CompoundTag fullBeNbt = storage.saveWithoutMetadata();
 
 		CompoundTag contentsNbt = new CompoundTag();
@@ -159,7 +162,7 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 			return;
 		}
 
-		if (contraption.entity.level().isClientSide() && ContraptionHelper.getStorage(contraption.entity).getAllItemStorages().get(localPos) instanceof MountedSophisticatedStorage mountedSophisticatedStorage) {
+		if (contraption.entity.level().isClientSide() && ContraptionHelper.getMountedStorage(contraption.entity, localPos) instanceof MountedSophisticatedStorage mountedSophisticatedStorage) {
 			mountedSophisticatedStorage.setStorageStack(getStorageStack());
 			mountedSophisticatedStorage.getStorageHolder().onStorageItemSynced();
 		}
@@ -250,8 +253,9 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 			localPos = info.pos().relative(ChestBlock.getConnectedDirection(info.state()));
 		}
 
+		int contraptionEntityId = contraption.entity.getId();
 		ItemStack itemInHand = player.getMainHandItem();
-		if (itemInHand.getItem() instanceof StorageTierUpgradeItem tierUpgradeItem && tryStorageTierUpgrade(player, itemInHand, tierUpgradeItem)) {
+		if (itemInHand.getItem() instanceof StorageTierUpgradeItem tierUpgradeItem && tryStorageTierUpgrade(player, itemInHand, tierUpgradeItem, contraptionEntityId)) {
 			return true;
 		} else if (itemInHand.getItem() instanceof StorageToolItem && tryToolInteraction(itemInHand)) {
 			return true;
@@ -263,7 +267,6 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 
 		Vec3 localPosVec = Vec3.atCenterOf(localPos);
 
-		int contraptionEntityId = contraption.entity.getId();
 		openMenu(player, contraptionEntityId, localPos);
 
 		Vec3 globalPos = contraption.entity.toGlobalVector(localPosVec, 0);
@@ -272,7 +275,11 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 	}
 
 	private boolean tryToolInteraction(ItemStack itemInHand) {
-		return StorageHolderToolHandler.tryStorageToolInteract(itemInHand, getStorageHolder()) == InteractionResult.SUCCESS;
+		boolean result = StorageHolderToolHandler.tryStorageToolInteract(itemInHand, getStorageHolder()) == InteractionResult.SUCCESS;
+		if (result && StorageToolItem.getMode(itemInHand) == StorageToolItem.Mode.LOCK) {
+			storageHolder.updateClientBlockRender();
+		}
+		return result;
 	}
 
 	private boolean tryAddStorageUpgrade(Player player, ItemStack itemInHand) {
@@ -285,14 +292,19 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 		}
 		BlockState state = blockItem.getBlock().defaultBlockState();
 		SoundEvent placeSound = state.getSoundType().getPlaceSound();
-		return PaintbrushItem.paint(player, paintbrush, getStorageHolder(), getStorageWrapper(), getStorageHolder().getPosition(), Direction.UP, placeSound);
+		boolean painted = PaintbrushItem.paint(player, paintbrush, getStorageHolder(), getStorageWrapper(), getStorageHolder().getPosition(), Direction.UP, placeSound);
+		if (painted) {
+			storageHolder.updateClientBlockRender();
+		}
+		return painted;
 	}
 
-	private boolean tryStorageTierUpgrade(ServerPlayer player, ItemStack itemInHand, StorageTierUpgradeItem tierUpgradeItem) {
+	private boolean tryStorageTierUpgrade(ServerPlayer player, ItemStack itemInHand, StorageTierUpgradeItem tierUpgradeItem, int contraptionEntityId) {
 		boolean upgraded = StorageHolderTierUpgradeHandler.upgrade(player, getStorageHolder(), itemInHand, tierUpgradeItem);
 
 		if (upgraded) {
 			storageHolder.updateState();
+			storageHolder.updateClientBlockRender();
 			return true;
 		}
 

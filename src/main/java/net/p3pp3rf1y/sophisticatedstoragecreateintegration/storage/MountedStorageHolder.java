@@ -13,6 +13,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.ChestType;
+import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -20,8 +21,10 @@ import net.minecraftforge.network.NetworkHooks;
 import net.p3pp3rf1y.sophisticatedcore.api.IStorageSavedData;
 import net.p3pp3rf1y.sophisticatedcore.api.IStorageWrapper;
 import net.p3pp3rf1y.sophisticatedcore.compat.create.ContraptionHelper;
+import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageBlockUpdatedMessage;
 import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageContainerMenuBase;
 import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageData;
+import net.p3pp3rf1y.sophisticatedcore.network.PacketHandler;
 import net.p3pp3rf1y.sophisticatedcore.util.NBTHelper;
 import net.p3pp3rf1y.sophisticatedcore.util.NoopStorageWrapper;
 import net.p3pp3rf1y.sophisticatedstorage.block.ChestBlock;
@@ -36,6 +39,7 @@ import net.p3pp3rf1y.sophisticatedstoragecreateintegration.common.MountedStorage
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.ref.WeakReference;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -104,6 +108,19 @@ public class MountedStorageHolder extends StorageHolderBase {
 
 	public void setLevel(Level level) {
 		this.level = new WeakReference<>(level);
+		if (!level.isClientSide()) {
+			getStorageWrapper().getRenderInfo().setDisplayItemsChangeListener(ri -> {
+				updateClientBlockRender();
+			});
+		}
+	}
+
+	public void updateClientBlockRender() {
+		Entity entity = getEntity();
+		if (entity == null || !isBarrel()) {
+			return;
+		}
+		PacketHandler.INSTANCE.sendToAllTracking(new MountedStorageBlockUpdatedMessage(entity.getId()), entity);
 	}
 
 	@Override
@@ -208,7 +225,7 @@ public class MountedStorageHolder extends StorageHolderBase {
 		setLevel(level);
 		setPosition(position);
 
-		if (isChest(getSyncedStorageStack()) && state.getValue(ChestBlock.TYPE) != ChestType.SINGLE) {
+		if (isChest() && state.getValue(ChestBlock.TYPE) != ChestType.SINGLE) {
 			chestOtherPartPos = localPos.relative(ChestBlock.getConnectedDirection(state));
 			isMainStorage = state.getValue(ChestBlock.TYPE) == ChestType.RIGHT;
 			if (!isMainStorage && level.isClientSide()) {
@@ -230,7 +247,7 @@ public class MountedStorageHolder extends StorageHolderBase {
 	@Override
 	public void startOpen(Player player, Entity entity) {
 		super.startOpen(player, entity);
-		if (isChest(getSyncedStorageStack()) && isMainStorage && chestOtherPartPos != BlockPos.ZERO) {
+		if (isChest() && isMainStorage && chestOtherPartPos != BlockPos.ZERO) {
 			getHolderOfOtherHalf(chestOtherPartPos).ifPresent(holder -> holder.startOpen(player, entity));
 		}
 	}
@@ -238,7 +255,7 @@ public class MountedStorageHolder extends StorageHolderBase {
 	private Optional<MountedStorageHolder> getHolderOfOtherHalf(BlockPos otherHalfLocalPos) {
 		Entity e = getEntity();
 		if (e instanceof AbstractContraptionEntity abstractContraptionEntity
-				&& ContraptionHelper.getStorage(abstractContraptionEntity).getAllItemStorages().get(otherHalfLocalPos) instanceof MountedSophisticatedStorage mountedSophisticatedStorage) {
+				&& ContraptionHelper.getMountedStorage(abstractContraptionEntity, otherHalfLocalPos) instanceof MountedSophisticatedStorage mountedSophisticatedStorage) {
 			return Optional.of(mountedSophisticatedStorage.getStorageHolder());
 		}
 		return Optional.empty();
@@ -247,7 +264,7 @@ public class MountedStorageHolder extends StorageHolderBase {
 	@Override
 	public void stopOpen(Player player, Entity entity) {
 		super.stopOpen(player, entity);
-		if (isChest(getSyncedStorageStack()) && isMainStorage && chestOtherPartPos != BlockPos.ZERO) {
+		if (isChest() && isMainStorage && chestOtherPartPos != BlockPos.ZERO) {
 			getHolderOfOtherHalf(chestOtherPartPos).ifPresent(holder -> holder.stopOpen(player, entity));
 		}
 	}
@@ -274,15 +291,16 @@ public class MountedStorageHolder extends StorageHolderBase {
 		if (getEntity() instanceof AbstractContraptionEntity cEntity && getSyncedStorageStack().getItem() instanceof StorageBlockItem storageBlockItem) {
 			StructureTemplate.StructureBlockInfo blockInfo = cEntity.getContraption().getBlocks().get(localPos);
 			BlockState newBlockState = storageBlockItem.getBlock().defaultBlockState();
+			for (Map.Entry<Property<?>, Comparable<?>> entry : blockInfo.state().getValues().entrySet()) {
+				Property<?> property = entry.getKey();
+				Comparable<?> value = entry.getValue();
+				newBlockState = setStateValue(newBlockState, property, value);
+			}
 			cEntity.setBlock(localPos, new StructureTemplate.StructureBlockInfo(blockInfo.pos(), newBlockState, blockInfo.nbt()));
 		}
 	}
 
-	@Override
-	protected void updateRenderBlockEntityAttributes(ItemStack storageItem, StorageBlockEntity renderBlockEntity) {
-		super.updateRenderBlockEntityAttributes(storageItem, renderBlockEntity);
-		if (getEntity() instanceof AbstractContraptionEntity cEntity) {
-			cEntity.getContraption().deferInvalidate = true; //force client render update when display items update
-		}
+	private <T extends Comparable<T>> BlockState setStateValue(BlockState state, Property<T> property, Object value) {
+		return state.setValue(property, (T) value);
 	}
 }
