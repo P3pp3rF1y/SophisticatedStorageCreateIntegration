@@ -3,6 +3,7 @@ package net.p3pp3rf1y.sophisticatedstoragecreateintegration.storage;
 import com.simibubi.create.content.contraptions.AbstractContraptionEntity;
 import com.simibubi.create.content.contraptions.behaviour.MovementContext;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
@@ -21,9 +22,9 @@ import net.minecraftforge.network.NetworkHooks;
 import net.p3pp3rf1y.sophisticatedcore.api.IStorageSavedData;
 import net.p3pp3rf1y.sophisticatedcore.api.IStorageWrapper;
 import net.p3pp3rf1y.sophisticatedcore.compat.create.ContraptionHelper;
-import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageBlockUpdatedMessage;
 import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageContainerMenuBase;
 import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageData;
+import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageUpdateMessage;
 import net.p3pp3rf1y.sophisticatedcore.network.PacketHandler;
 import net.p3pp3rf1y.sophisticatedcore.util.NBTHelper;
 import net.p3pp3rf1y.sophisticatedcore.util.NoopStorageWrapper;
@@ -58,6 +59,8 @@ public class MountedStorageHolder extends StorageHolderBase {
 	private boolean clearedNbt = false;
 	@Nullable
 	private WeakReference<IStorageWrapper> otherHalfStorageWrapper = null;
+	private boolean refreshClientBlockRender = false;
+	private boolean dirty = false;
 
 	public MountedStorageHolder(Supplier<ItemStack> storageStackGetter, Consumer<ItemStack> storageStackSetter) {
 		super(false);
@@ -68,6 +71,12 @@ public class MountedStorageHolder extends StorageHolderBase {
 
 	public void setLocalPos(BlockPos localPos) {
 		this.localPos = localPos;
+	}
+
+	@Override
+	public void setStorageItem(ItemStack storageItem) {
+		super.setStorageItem(storageItem);
+		dirty = true;
 	}
 
 	@Override
@@ -110,17 +119,35 @@ public class MountedStorageHolder extends StorageHolderBase {
 		this.level = new WeakReference<>(level);
 		if (!level.isClientSide()) {
 			getStorageWrapper().getRenderInfo().setDisplayItemsChangeListener(ri -> {
-				updateClientBlockRender();
+				updateClientBlockRenderAfterNextSync();
 			});
 		}
 	}
 
-	public void updateClientBlockRender() {
-		Entity entity = getEntity();
-		if (entity == null || !isBarrel()) {
+	public void updateClientBlockRenderAfterNextSync() {
+		refreshClientBlockRender = true;
+	}
+
+	@Override
+	public void tick(Entity entity) {
+		Level level = getLevel();
+		if (level instanceof ServerLevel) {
+			sendStorageUpdatePayload();
+		}
+		super.tick(entity);
+	}
+
+	public void sendStorageUpdatePayload() {
+		if (!dirty) {
 			return;
 		}
-		PacketHandler.INSTANCE.sendToAllTracking(new MountedStorageBlockUpdatedMessage(entity.getId()), entity);
+		dirty = false;
+
+		Entity entity = getEntity();
+		if (entity == null || entity.level().isClientSide()) {
+			return;
+		}
+		PacketHandler.INSTANCE.sendToAllTracking(new MountedStorageUpdateMessage(entity.getId(), localPos, getSyncedStorageStack(), refreshClientBlockRender && isBarrel()), entity);
 	}
 
 	@Override
@@ -302,5 +329,9 @@ public class MountedStorageHolder extends StorageHolderBase {
 
 	private <T extends Comparable<T>> BlockState setStateValue(BlockState state, Property<T> property, Object value) {
 		return state.setValue(property, (T) value);
+	}
+
+	public void setDirty() {
+		dirty = true;
 	}
 }
