@@ -292,7 +292,7 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 
 		int contraptionEntityId = contraption.entity.getId();
 		ItemStack itemInHand = player.getMainHandItem();
-		if (itemInHand.getItem() instanceof StorageTierUpgradeItem tierUpgradeItem && tryStorageTierUpgrade(player, itemInHand, tierUpgradeItem, contraptionEntityId)) {
+		if (itemInHand.getItem() instanceof StorageTierUpgradeItem tierUpgradeItem && tryStorageTierUpgrade(player, itemInHand, tierUpgradeItem)) {
 			return true;
 		} else if (itemInHand.getItem() instanceof StorageToolItem && tryToolInteraction(itemInHand)) {
 			return true;
@@ -341,7 +341,7 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 		return painted;
 	}
 
-	private boolean tryStorageTierUpgrade(ServerPlayer player, ItemStack itemInHand, StorageTierUpgradeItem tierUpgradeItem, int contraptionEntityId) {
+	private boolean tryStorageTierUpgrade(ServerPlayer player, ItemStack itemInHand, StorageTierUpgradeItem tierUpgradeItem) {
 		boolean upgraded = StorageHolderTierUpgradeHandler.upgrade(player, getStorageHolder(), itemInHand, tierUpgradeItem);
 
 		if (upgraded) {
