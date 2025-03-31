@@ -3,6 +3,7 @@ package net.p3pp3rf1y.sophisticatedstoragecreateintegration.storage;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
 import com.mojang.serialization.MapCodec;
+import com.simibubi.create.content.contraptions.AbstractContraptionEntity;
 import com.simibubi.create.content.contraptions.Contraption;
 import com.simibubi.create.content.contraptions.behaviour.MovementContext;
 import net.minecraft.core.BlockPos;
@@ -36,7 +37,6 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.items.IItemHandlerModifiable;
 import net.p3pp3rf1y.sophisticatedcore.api.IStorageWrapper;
 import net.p3pp3rf1y.sophisticatedcore.common.gui.SortBy;
-import net.p3pp3rf1y.sophisticatedcore.compat.create.ContraptionHelper;
 import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageBase;
 import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageContainerMenuBase;
 import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageData;
@@ -163,7 +163,7 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 
 		MountedSophisticatedStorage mountedStorage = new MountedSophisticatedStorage(storageItem);
 		if (!level.isClientSide()) {
-			mountedStorage.setDirty();
+			mountedStorage.getStorageHolder().setDirty();
 		}
 		return mountedStorage;
 	}
@@ -173,14 +173,18 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 	}
 
 	@Override
-	public void afterSync(Contraption contraption, BlockPos localPos) {
-		if (contraption.entity == null) {
-			return;
-		}
+	protected void afterInitialSync() {
+		storageHolder.refreshRenderBlockEntity();
+	}
 
-		if (contraption.entity.level().isClientSide() && ContraptionHelper.getMountedStorage(contraption.entity, localPos) instanceof MountedSophisticatedStorage mountedSophisticatedStorage) {
-			mountedSophisticatedStorage.setStorageStack(getStorageStack());
-			mountedSophisticatedStorage.getStorageHolder().onStorageItemSynced();
+	@Override
+	public void updateWithSyncedStorageStack(ItemStack storageStack, boolean refreshBlockRender) {
+		storageHolder.setStorageItem(storageStack);
+		storageHolder.refreshRenderBlockEntity();
+		if (refreshBlockRender) {
+			if (storageHolder.getEntity() instanceof AbstractContraptionEntity contraptionEntity) {
+				contraptionEntity.getContraption().deferInvalidate = true;
+			}
 		}
 	}
 
@@ -313,7 +317,8 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 	private boolean tryToolInteraction(ItemStack itemInHand) {
 		boolean result = StorageHolderToolHandler.tryStorageToolInteract(itemInHand, getStorageHolder()) == InteractionResult.SUCCESS;
 		if (result && StorageToolItem.getMode(itemInHand) == StorageToolItem.Mode.LOCK) {
-			storageHolder.updateClientBlockRender();
+			storageHolder.updateClientBlockRenderAfterNextSync();
+			storageHolder.sendStorageUpdatePayload();
 		}
 		return result;
 	}
@@ -330,7 +335,8 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 		SoundEvent placeSound = state.getSoundType().getPlaceSound();
 		boolean painted = PaintbrushItem.paint(player, paintbrush, getStorageHolder(), getStorageWrapper(), getStorageHolder().getPosition(), Direction.UP, placeSound);
 		if (painted) {
-			storageHolder.updateClientBlockRender();
+			storageHolder.updateClientBlockRenderAfterNextSync();
+			storageHolder.sendStorageUpdatePayload();
 		}
 		return painted;
 	}
@@ -340,7 +346,6 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 
 		if (upgraded) {
 			storageHolder.updateState();
-			storageHolder.updateClientBlockRender();
 			return true;
 		}
 
