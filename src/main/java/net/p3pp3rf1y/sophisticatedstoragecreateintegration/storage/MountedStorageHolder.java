@@ -40,7 +40,6 @@ import net.p3pp3rf1y.sophisticatedstoragecreateintegration.common.MountedStorage
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.ref.WeakReference;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -194,6 +193,15 @@ public class MountedStorageHolder extends StorageHolderBase {
 	}
 
 	@Override
+	protected void updateRenderBlockEntityAttributes(ItemStack storageItem, StorageBlockEntity renderBlockEntity) {
+		if (updateRenderAttributes && getEntity() instanceof AbstractContraptionEntity cEntity) {
+			StructureTemplate.StructureBlockInfo blockInfo = cEntity.getContraption().getBlocks().get(localPos);
+			renderBlockEntity.setBlockState(blockInfo.state());
+		}
+		super.updateRenderBlockEntityAttributes(storageItem, renderBlockEntity);
+	}
+
+	@Override
 	protected void setLocked(boolean locked) {
 		getSyncedStorageStack().getOrCreateTag().putBoolean(LOCKED_TAG, locked);
 	}
@@ -318,10 +326,8 @@ public class MountedStorageHolder extends StorageHolderBase {
 		if (getEntity() instanceof AbstractContraptionEntity cEntity && getSyncedStorageStack().getItem() instanceof StorageBlockItem storageBlockItem) {
 			StructureTemplate.StructureBlockInfo blockInfo = cEntity.getContraption().getBlocks().get(localPos);
 			BlockState newBlockState = storageBlockItem.getBlock().defaultBlockState();
-			for (Map.Entry<Property<?>, Comparable<?>> entry : blockInfo.state().getValues().entrySet()) {
-				Property<?> property = entry.getKey();
-				Comparable<?> value = entry.getValue();
-				newBlockState = setStateValue(newBlockState, property, value);
+			for (var entry : blockInfo.state().getValues().entrySet()) {
+				newBlockState = setStateValue(newBlockState, entry.getKey(), entry.getValue());
 			}
 			cEntity.setBlock(localPos, new StructureTemplate.StructureBlockInfo(blockInfo.pos(), newBlockState, blockInfo.nbt()));
 		}
