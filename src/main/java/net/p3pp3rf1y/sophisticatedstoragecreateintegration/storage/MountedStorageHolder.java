@@ -354,4 +354,8 @@ public class MountedStorageHolder extends StorageHolderBase {
 	public StorageHolderBase getMainStorageHolder() {
 		return isMainStorage ? super.getMainStorageHolder() : getHolderOfOtherHalf().orElse(this);
 	}
+
+	public boolean isDoubleChest() {
+		return isChest() && chestOtherPartPos != BlockPos.ZERO;
+	}
 }
