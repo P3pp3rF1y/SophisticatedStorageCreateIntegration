@@ -83,7 +83,7 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 	public void setStorageStack(ItemStack stack) {
 		super.setStorageStack(stack);
 		if (storageHolder.getEntity() != null && !storageHolder.getEntity().level().isClientSide()) {
-			setDirty();
+			storageHolder.setDirty();
 		}
 	}
 
