@@ -1,22 +1,31 @@
 package net.p3pp3rf1y.sophisticatedstoragecreateintegration.common;
 
+import com.simibubi.create.content.contraptions.AbstractContraptionEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.MenuType;
+import net.p3pp3rf1y.sophisticatedcore.compat.create.ContraptionHelper;
 import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageSettingsContainerMenuBase;
 import net.p3pp3rf1y.sophisticatedstorage.entity.MovingStorageWrapper;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.init.ModContent;
+import net.p3pp3rf1y.sophisticatedstoragecreateintegration.storage.MountedSophisticatedStorage;
 
 public class MountedStorageSettingsContainerMenu extends MountedStorageSettingsContainerMenuBase {
+	private final boolean doubleChest;
 	protected MountedStorageSettingsContainerMenu(int windowId, Player player, int contraptionEntityId, BlockPos localPos) {
 		this(ModContent.MOUNTED_STORAGE_SETTINGS_CONTAINER_TYPE.get(), windowId, player, contraptionEntityId, localPos);
 	}
 
 	protected MountedStorageSettingsContainerMenu(MenuType<?> menuType, int windowId, Player player, int contraptionEntityId, BlockPos localPos) {
 		super(menuType, windowId, player, contraptionEntityId, localPos);
+		if (getPlayer().level().getEntity(getContraptionEntityId()) instanceof AbstractContraptionEntity cEntity) {
+			doubleChest = ContraptionHelper.getMountedStorage(cEntity, getLocalPos()) instanceof MountedSophisticatedStorage mountedSophisticatedStorage && mountedSophisticatedStorage.getStorageHolder().isDoubleChest();
+		} else {
+			doubleChest = false;
+		}
 	}
 
 	@Override
@@ -26,5 +35,10 @@ public class MountedStorageSettingsContainerMenu extends MountedStorageSettingsC
 
 	public static MountedStorageSettingsContainerMenu fromBuffer(int windowId, Inventory playerInventory, FriendlyByteBuf buffer) {
 		return new MountedStorageSettingsContainerMenu(windowId, playerInventory.player, buffer.readInt(), buffer.readBlockPos());
+	}
+
+	@Override
+	public boolean supportsItemDisplaySideSelection() {
+		return doubleChest;
 	}
 }
