@@ -285,6 +285,13 @@ public class MountedStorageHolder extends StorageHolderBase {
 		}
 	}
 
+	private Optional<StorageHolderBase> getHolderOfOtherHalf() {
+		if (isChest() && chestOtherPartPos != BlockPos.ZERO) {
+			return getHolderOfOtherHalf(chestOtherPartPos).map(MountedStorageHolder.class::cast);
+		}
+		return Optional.empty();
+	}
+
 	private Optional<MountedStorageHolder> getHolderOfOtherHalf(BlockPos otherHalfLocalPos) {
 		Entity e = getEntity();
 		if (e instanceof AbstractContraptionEntity abstractContraptionEntity
@@ -336,5 +343,15 @@ public class MountedStorageHolder extends StorageHolderBase {
 
 	public void setDirty() {
 		dirty = true;
+	}
+
+	@Override
+	public Optional<StorageHolderBase> getAuxiliaryStorageHolder() {
+		return isMainStorage ? getHolderOfOtherHalf() : Optional.of(this);
+	}
+
+	@Override
+	public StorageHolderBase getMainStorageHolder() {
+		return isMainStorage ? super.getMainStorageHolder() : getHolderOfOtherHalf().orElse(this);
 	}
 }

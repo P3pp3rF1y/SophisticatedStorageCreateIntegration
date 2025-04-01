@@ -157,6 +157,7 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 		if (storage instanceof ChestBlockEntity chestBlock) {
 			BlockState blockState = chestBlock.getBlockState();
 			if (blockState.getValue(ChestBlock.TYPE) != ChestType.SINGLE) {
+				ChestBlockItem.setDoubleChest(storageItem, true);
 				chestBlock.removeDoubleMainPos();
 			}
 		}
@@ -292,8 +293,11 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 
 		int contraptionEntityId = contraption.entity.getId();
 		ItemStack itemInHand = player.getMainHandItem();
-		if (itemInHand.getItem() instanceof StorageTierUpgradeItem tierUpgradeItem && tryStorageTierUpgrade(player, itemInHand, tierUpgradeItem)) {
-			return true;
+		if (itemInHand.getItem() instanceof StorageTierUpgradeItem tierUpgradeItem) {
+			InteractionResult result = tryStorageTierUpgrade(player, itemInHand, tierUpgradeItem);
+			if (result != InteractionResult.PASS) {
+				return result == InteractionResult.SUCCESS;
+			}
 		} else if (itemInHand.getItem() instanceof StorageToolItem && tryToolInteraction(itemInHand)) {
 			return true;
 		} else if (itemInHand.getItem() instanceof UpgradeItemBase<?> && tryAddStorageUpgrade(player, itemInHand)) {
@@ -341,15 +345,24 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 		return painted;
 	}
 
-	private boolean tryStorageTierUpgrade(ServerPlayer player, ItemStack itemInHand, StorageTierUpgradeItem tierUpgradeItem) {
-		boolean upgraded = StorageHolderTierUpgradeHandler.upgrade(player, getStorageHolder(), itemInHand, tierUpgradeItem);
+	private InteractionResult tryStorageTierUpgrade(ServerPlayer player, ItemStack itemInHand, StorageTierUpgradeItem tierUpgradeItem) {
+		InteractionResult result = StorageHolderTierUpgradeHandler.upgrade(player, getStorageHolder(), itemInHand, tierUpgradeItem);
 
-		if (upgraded) {
-			storageHolder.updateState();
-			return true;
+		if (result == InteractionResult.SUCCESS) {
+			if (getStorageStack().getItem() instanceof ChestBlockItem && ChestBlockItem.isDoubleChest(getStorageStack())) {
+				if (storageHolder.getMainStorageHolder() instanceof MountedStorageHolder mainStorageHolder) {
+					mainStorageHolder.updateState();
+				}
+				storageHolder.getAuxiliaryStorageHolder().filter(MountedStorageHolder.class::isInstance)
+						.map(MountedStorageHolder.class::cast)
+						.ifPresent(MountedStorageHolder::updateState);
+			} else {
+				storageHolder.updateState();
+			}
+			return InteractionResult.SUCCESS;
 		}
 
-		return false;
+		return result;
 	}
 
 	public MountedStorageHolder getStorageHolder() {
