@@ -3,6 +3,7 @@ package net.p3pp3rf1y.sophisticatedstoragecreateintegration.init;
 import com.simibubi.create.api.behaviour.movement.MovementBehaviour;
 import com.simibubi.create.api.contraption.storage.item.MountedItemStorageType;
 import com.simibubi.create.api.registry.CreateBuiltInRegistries;
+import com.simibubi.create.api.schematic.nbt.SafeNbtWriterRegistry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.inventory.MenuType;
 import net.neoforged.api.distmarker.Dist;
@@ -14,11 +15,13 @@ import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.p3pp3rf1y.sophisticatedstorage.SophisticatedStorage;
 import net.p3pp3rf1y.sophisticatedstorage.block.StorageBlockBase;
+import net.p3pp3rf1y.sophisticatedstorage.init.ModBlocks;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.SophisticatedStorageCreateIntegration;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.common.MountedLimitedBarrelContainerMenu;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.common.MountedLimitedBarrelSettingsContainerMenu;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.common.MountedStorageContainerMenu;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.common.MountedStorageSettingsContainerMenu;
+import net.p3pp3rf1y.sophisticatedstoragecreateintegration.schematic.SophisticatedStorageSafeNbtWriter;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.storage.MountedSophisticatedStorageType;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.storage.SophisticatedStorageMovementBehaviour;
 
@@ -60,5 +63,9 @@ public class ModContent {
 					MountedItemStorageType.REGISTRY.register(block, SOPHISTICATED_MOUNTED_STORAGE_TYPE.get());
 					MovementBehaviour.REGISTRY.register(block, SophisticatedStorageMovementBehaviour.INSTANCE);
 				});
+		SafeNbtWriterRegistry.REGISTRY.register(ModBlocks.CHEST_BLOCK_ENTITY_TYPE.get(), SophisticatedStorageSafeNbtWriter.Wooden.INSTANCE);
+		SafeNbtWriterRegistry.REGISTRY.register(ModBlocks.BARREL_BLOCK_ENTITY_TYPE.get(), SophisticatedStorageSafeNbtWriter.Wooden.INSTANCE);
+		SafeNbtWriterRegistry.REGISTRY.register(ModBlocks.LIMITED_BARREL_BLOCK_ENTITY_TYPE.get(), SophisticatedStorageSafeNbtWriter.Wooden.INSTANCE);
+		SafeNbtWriterRegistry.REGISTRY.register(ModBlocks.SHULKER_BOX_BLOCK_ENTITY_TYPE.get(), SophisticatedStorageSafeNbtWriter.INSTANCE);
 	}
 }
