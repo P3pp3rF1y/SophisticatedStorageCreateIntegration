@@ -75,7 +75,7 @@ jobs:
             const gh = ${{ toJSON(github) }};
 
             core.setOutput('EMBED_TITLE', "[" + gh.event.repository.name + ":" + gh.ref_name +"] new build ${{steps.version.outputs.VERSION_NAME}}");
-            core.setOutput('EMBED_URL', "https://github.com/P3pp3rF1y/SophisticatedStorage/packages/1388832?version=${{steps.version.outputs.VERSION_NAME}}");
+            core.setOutput('EMBED_URL', "https://github.com/P3pp3rF1y/SophisticatedStorageCreateIntegration/packages/2450059?version=${{steps.version.outputs.VERSION_NAME}}");
             core.setOutput('EMBED_AUTHOR_NAME', gh.event.sender.login);
             core.setOutput('EMBED_AUTHOR_ICON_URL', gh.event.sender.avatar_url);
 

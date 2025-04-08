@@ -36,6 +36,7 @@ import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemp
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.items.IItemHandlerModifiable;
 import net.p3pp3rf1y.sophisticatedcore.api.IStorageWrapper;
+import net.p3pp3rf1y.sophisticatedcore.common.gui.SophisticatedMenuProvider;
 import net.p3pp3rf1y.sophisticatedcore.common.gui.SortBy;
 import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageBase;
 import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageContainerMenuBase;
@@ -269,7 +270,6 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 		}
 	}
 
-	@Override
 	public MountedStorageContainerMenuBase createMenu(int id, Player pl, int contraptionEntityId, BlockPos localPos) {
 		if (MovingStorageWrapper.isLimitedBarrel(getStorageStack())) {
 			return new MountedLimitedBarrelContainerMenu(id, pl, contraptionEntityId, localPos);
@@ -384,6 +384,14 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 	@Override
 	protected IItemHandlerModifiable getExternalItemHandler() {
 		return getStorageHolder().getMainStorageWrapper().getInventoryForInputOutput();
+	}
+
+	public OptionalInt openMenu(ServerPlayer player, int contraptionEntityId, BlockPos localPos) {
+		return player.openMenu(new SophisticatedMenuProvider((w, p, pl) -> createMenu(w, pl, contraptionEntityId, localPos), getStorageStack().getHoverName(), false),
+				buffer -> {
+					buffer.writeInt(contraptionEntityId);
+					buffer.writeBlockPos(localPos);
+				});
 	}
 
 	public record NbtToComponentMapper<T>(String tagName, Supplier<DataComponentType<T>> type,

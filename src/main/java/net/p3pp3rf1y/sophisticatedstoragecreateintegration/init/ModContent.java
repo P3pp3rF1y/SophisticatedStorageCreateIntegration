@@ -11,6 +11,8 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.common.extensions.IMenuTypeExtension;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
+import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.p3pp3rf1y.sophisticatedstorage.SophisticatedStorage;
@@ -23,6 +25,7 @@ import net.p3pp3rf1y.sophisticatedstoragecreateintegration.common.MountedStorage
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.common.MountedStorageSettingsContainerMenu;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.schematic.SophisticatedStorageSafeNbtWriter;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.storage.MountedSophisticatedStorageType;
+import net.p3pp3rf1y.sophisticatedstoragecreateintegration.storage.OpenMountedStorageInventoryPayload;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.storage.SophisticatedStorageMovementBehaviour;
 
 import java.util.function.Supplier;
@@ -55,6 +58,7 @@ public class ModContent {
 		}
 
 		modBus.addListener(ModContent::onModSetup);
+		modBus.addListener(ModContent::registerPayloads);
 	}
 
 	private static void onModSetup(FMLCommonSetupEvent event) {
@@ -67,5 +71,10 @@ public class ModContent {
 		SafeNbtWriterRegistry.REGISTRY.register(ModBlocks.BARREL_BLOCK_ENTITY_TYPE.get(), SophisticatedStorageSafeNbtWriter.Wooden.INSTANCE);
 		SafeNbtWriterRegistry.REGISTRY.register(ModBlocks.LIMITED_BARREL_BLOCK_ENTITY_TYPE.get(), SophisticatedStorageSafeNbtWriter.Wooden.INSTANCE);
 		SafeNbtWriterRegistry.REGISTRY.register(ModBlocks.SHULKER_BOX_BLOCK_ENTITY_TYPE.get(), SophisticatedStorageSafeNbtWriter.INSTANCE);
+	}
+
+	private static void registerPayloads(final RegisterPayloadHandlersEvent event) {
+		PayloadRegistrar registrar = event.registrar(SophisticatedStorageCreateIntegration.MOD_ID).versioned("1.0");
+		registrar.playToServer(OpenMountedStorageInventoryPayload.TYPE, OpenMountedStorageInventoryPayload.STREAM_CODEC, OpenMountedStorageInventoryPayload::handlePayload);
 	}
 }

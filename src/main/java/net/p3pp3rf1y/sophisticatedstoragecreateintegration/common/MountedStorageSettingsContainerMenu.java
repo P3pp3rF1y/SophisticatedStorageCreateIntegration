@@ -4,14 +4,19 @@ import com.simibubi.create.content.contraptions.AbstractContraptionEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.MenuType;
-import net.p3pp3rf1y.sophisticatedcore.compat.create.ContraptionHelper;
-import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageSettingsContainerMenuBase;
+import net.minecraft.world.level.Level;
+import net.p3pp3rf1y.sophisticatedcore.api.IStorageWrapper;
+import net.p3pp3rf1y.sophisticatedcore.compat.create.*;
+import net.p3pp3rf1y.sophisticatedcore.util.NoopStorageWrapper;
 import net.p3pp3rf1y.sophisticatedstorage.entity.MovingStorageWrapper;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.init.ModContent;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.storage.MountedSophisticatedStorage;
+
+import java.util.UUID;
 
 public class MountedStorageSettingsContainerMenu extends MountedStorageSettingsContainerMenuBase {
 	private final boolean doubleChest;
@@ -20,12 +25,24 @@ public class MountedStorageSettingsContainerMenu extends MountedStorageSettingsC
 	}
 
 	protected MountedStorageSettingsContainerMenu(MenuType<?> menuType, int windowId, Player player, int contraptionEntityId, BlockPos localPos) {
-		super(menuType, windowId, player, contraptionEntityId, localPos);
+		super(menuType, windowId, player, getWrapper(player.level(), contraptionEntityId, localPos), contraptionEntityId, localPos);
 		if (getPlayer().level().getEntity(getContraptionEntityId()) instanceof AbstractContraptionEntity cEntity) {
 			doubleChest = ContraptionHelper.getMountedStorage(cEntity, getLocalPos()) instanceof MountedSophisticatedStorage mountedSophisticatedStorage && mountedSophisticatedStorage.getStorageHolder().isDoubleChest();
 		} else {
 			doubleChest = false;
 		}
+	}
+
+	private static IStorageWrapper getWrapper(Level level, int contraptionEntityId, BlockPos localPos) {
+		if (!(level.getEntity(contraptionEntityId) instanceof AbstractContraptionEntity contraptionEntity)) {
+			return NoopStorageWrapper.INSTANCE;
+		}
+		MountedStorageBase itemStorage = ContraptionHelper.getMountedStorage(contraptionEntity, localPos);
+		if (itemStorage == null) {
+			return NoopStorageWrapper.INSTANCE;
+		}
+
+		return itemStorage.getStorageWrapper();
 	}
 
 	@Override
@@ -40,5 +57,19 @@ public class MountedStorageSettingsContainerMenu extends MountedStorageSettingsC
 	@Override
 	public boolean supportsItemDisplaySideSelection() {
 		return doubleChest;
+	}
+
+	@Override
+	protected CustomPacketPayload instantiateSettingsPayload(UUID uuid, CompoundTag settingsContents) {
+		return new MountedStorageContentsPayload(uuid, settingsContents);
+	}
+
+	@Override
+	protected void updateFromContents(UUID uuid) {
+		MountedStorageData storage = MountedStorageData.get(uuid);
+		if (storage.removeUpdatedStorageSettingsFlag(uuid)) {
+			CompoundTag contents = storage.getContents();
+			storageWrapper.getSettingsHandler().reloadFrom(getSettingsTag(contents));
+		}
 	}
 }
