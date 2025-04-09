@@ -3,6 +3,8 @@ package net.p3pp3rf1y.sophisticatedstoragecreateintegration.common;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.MenuType;
@@ -10,7 +12,9 @@ import net.p3pp3rf1y.sophisticatedcore.api.IStorageWrapper;
 import net.p3pp3rf1y.sophisticatedcore.common.gui.ISyncedContainer;
 import net.p3pp3rf1y.sophisticatedcore.common.gui.StorageContainerMenuBase;
 import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageContainerMenuBase;
+import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageContentsMessage;
 import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageSettingsContainerMenuBase;
+import net.p3pp3rf1y.sophisticatedcore.network.PacketHandler;
 import net.p3pp3rf1y.sophisticatedcore.settings.itemdisplay.ItemDisplaySettingsCategory;
 import net.p3pp3rf1y.sophisticatedcore.upgrades.UpgradeHandler;
 import net.p3pp3rf1y.sophisticatedcore.util.NoopStorageWrapper;
@@ -21,6 +25,7 @@ import net.p3pp3rf1y.sophisticatedstoragecreateintegration.storage.MountedSophis
 
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 public class MountedStorageContainerMenu extends MountedStorageContainerMenuBase implements ISyncedContainer {
 	public MountedStorageContainerMenu(int containerId, Player player, int contraptionEntityId, BlockPos localPos) {
@@ -69,6 +74,12 @@ public class MountedStorageContainerMenu extends MountedStorageContainerMenuBase
 	}
 
 	@Override
+	protected void writeSettingsContainerMenuExtraData(FriendlyByteBuf buffer) {
+		buffer.writeInt(getEntity().map(Entity::getId).orElse(-1));
+		buffer.writeBlockPos(localPos);
+	}
+
+	@Override
 	protected CompoundTag getSettingsTag(CompoundTag contents) {
 		return contents.getCompound(MovingStorageWrapper.SETTINGS_TAG);
 	}
@@ -81,5 +92,10 @@ public class MountedStorageContainerMenu extends MountedStorageContainerMenuBase
 	@Override
 	protected String getSettingsTitleKey() {
 		return StorageTranslationHelper.INSTANCE.translGui("settings.title");
+	}
+
+	@Override
+	protected void sendSettingsToClient(UUID uuid, ServerPlayer serverPlayer, CompoundTag settingsContents) {
+		PacketHandler.INSTANCE.sendToClient(serverPlayer, new MountedStorageContentsMessage(uuid, settingsContents));
 	}
 }

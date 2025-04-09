@@ -14,6 +14,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockItem;
@@ -26,6 +27,7 @@ import net.minecraft.world.level.block.state.properties.ChestType;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.items.IItemHandlerModifiable;
+import net.minecraftforge.network.NetworkHooks;
 import net.p3pp3rf1y.sophisticatedcore.api.IStorageWrapper;
 import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageBase;
 import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageContainerMenuBase;
@@ -159,7 +161,8 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 
 	@Override
 	protected void afterInitialSync() {
-		storageHolder.refreshRenderBlockEntity();
+		storageHolder.onStackChanged();
+		storageHolder.updateClientBlockRender();
 	}
 
 	@Override
@@ -236,7 +239,6 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 		);
 	}
 
-	@Override
 	public MountedStorageContainerMenuBase createMenu(int id, Player pl, int contraptionEntityId, BlockPos localPos) {
 		if (MovingStorageWrapper.isLimitedBarrel(getStorageStack())) {
 			return new MountedLimitedBarrelContainerMenu(id, pl, contraptionEntityId, localPos);
@@ -285,7 +287,7 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 	private boolean tryToolInteraction(ItemStack itemInHand) {
 		boolean result = StorageHolderToolHandler.tryStorageToolInteract(itemInHand, getStorageHolder()) == InteractionResult.SUCCESS;
 		if (result && StorageToolItem.getMode(itemInHand) == StorageToolItem.Mode.LOCK) {
-			storageHolder.updateClientBlockRenderAfterNextSync();
+			storageHolder.updateClientBlockRender();
 			storageHolder.sendStorageUpdatePayload();
 		}
 		return result;
@@ -303,7 +305,7 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 		SoundEvent placeSound = state.getSoundType().getPlaceSound();
 		boolean painted = PaintbrushItem.paint(player, paintbrush, getStorageHolder(), getStorageWrapper(), getStorageHolder().getPosition(), Direction.UP, placeSound);
 		if (painted) {
-			storageHolder.updateClientBlockRenderAfterNextSync();
+			storageHolder.updateClientBlockRender();
 			storageHolder.sendStorageUpdatePayload();
 		}
 		return painted;
@@ -350,4 +352,13 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 		return getStorageHolder().getMainStorageWrapper().getInventoryForInputOutput();
 	}
 
+	public void openMenu(ServerPlayer player, int contraptionEntityId, BlockPos localPos) {
+		NetworkHooks.openScreen(
+				player,
+				new SimpleMenuProvider((w, p, pl) -> createMenu(w, pl, contraptionEntityId, localPos), getStorageStack().getHoverName()),
+				buffer -> {
+					buffer.writeInt(contraptionEntityId);
+					buffer.writeBlockPos(localPos);
+				});
+	}
 }

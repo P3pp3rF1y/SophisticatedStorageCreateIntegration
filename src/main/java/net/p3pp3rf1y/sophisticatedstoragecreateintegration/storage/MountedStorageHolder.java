@@ -118,12 +118,12 @@ public class MountedStorageHolder extends StorageHolderBase {
 		this.level = new WeakReference<>(level);
 		if (!level.isClientSide()) {
 			getStorageWrapper().getRenderInfo().setDisplayItemsChangeListener(ri -> {
-				updateClientBlockRenderAfterNextSync();
+				updateClientBlockRender();
 			});
 		}
 	}
 
-	public void updateClientBlockRenderAfterNextSync() {
+	public void updateClientBlockRender() {
 		refreshClientBlockRender = true;
 	}
 
@@ -132,6 +132,11 @@ public class MountedStorageHolder extends StorageHolderBase {
 		Level level = getLevel();
 		if (level instanceof ServerLevel) {
 			sendStorageUpdatePayload();
+		} else if (level != null && level.isClientSide() && refreshClientBlockRender) {
+			refreshClientBlockRender = false;
+			if (getEntity() instanceof AbstractContraptionEntity contraptionEntity) {
+				contraptionEntity.getContraption().deferInvalidate = true;
+			}
 		}
 		super.tick(entity);
 	}

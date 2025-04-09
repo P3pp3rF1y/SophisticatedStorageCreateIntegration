@@ -22,6 +22,7 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.p3pp3rf1y.sophisticatedstorage.block.StorageBlockBase;
 import net.p3pp3rf1y.sophisticatedstorage.init.ModBlocks;
+import net.p3pp3rf1y.sophisticatedstorage.network.StoragePacketHandler;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.SophisticatedStorageCreateIntegration;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.common.MountedLimitedBarrelContainerMenu;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.common.MountedLimitedBarrelSettingsContainerMenu;
@@ -29,6 +30,7 @@ import net.p3pp3rf1y.sophisticatedstoragecreateintegration.common.MountedStorage
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.common.MountedStorageSettingsContainerMenu;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.schematic.SophisticatedStorageSafeNbtWriter;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.storage.MountedSophisticatedStorageType;
+import net.p3pp3rf1y.sophisticatedstoragecreateintegration.storage.OpenMountedStorageInventoryMessage;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.storage.SophisticatedStorageMovementBehaviour;
 
 import java.util.function.Supplier;
@@ -58,8 +60,8 @@ public class ModContent {
 			() -> IForgeMenuType.create(MountedLimitedBarrelSettingsContainerMenu::fromBuffer));
 
 	public static void registerHandler(IEventBus modBus) {
-		MENU_TYPES.register(modBus);
 		REGISTRATE.registerEventListeners(modBus);
+		MENU_TYPES.register(modBus);
 
 		if (FMLEnvironment.dist == Dist.CLIENT) {
 			ModContentClient.registerHandlers(modBus);
@@ -78,5 +80,8 @@ public class ModContent {
 		SafeNbtWriterRegistry.REGISTRY.register(ModBlocks.BARREL_BLOCK_ENTITY_TYPE.get(), SophisticatedStorageSafeNbtWriter.Wooden.INSTANCE);
 		SafeNbtWriterRegistry.REGISTRY.register(ModBlocks.LIMITED_BARREL_BLOCK_ENTITY_TYPE.get(), SophisticatedStorageSafeNbtWriter.Wooden.INSTANCE);
 		SafeNbtWriterRegistry.REGISTRY.register(ModBlocks.SHULKER_BOX_BLOCK_ENTITY_TYPE.get(), SophisticatedStorageSafeNbtWriter.INSTANCE);
+		event.enqueueWork(() -> {
+			StoragePacketHandler.INSTANCE.registerMessage(OpenMountedStorageInventoryMessage.class, OpenMountedStorageInventoryMessage::encode, OpenMountedStorageInventoryMessage::decode, OpenMountedStorageInventoryMessage::onMessage);
+		});
 	}
 }
