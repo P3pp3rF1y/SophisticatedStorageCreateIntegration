@@ -4,6 +4,7 @@ import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegisterEvent;
+import net.p3pp3rf1y.sophisticatedcore.compat.trashslot.TrashSlotScreenRegistry;
 import net.p3pp3rf1y.sophisticatedstorage.client.ClientEventHandler;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.client.MountedLimitedBarrelScreen;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.client.MountedLimitedBarrelSettingsScreen;
@@ -26,5 +27,7 @@ public class ModContentClient {
 		MenuScreens.register(ModContent.MOUNTED_STORAGE_SETTINGS_CONTAINER_TYPE.get(), MountedStorageSettingsScreen::constructScreen);
 		MenuScreens.register(ModContent.MOUNTED_LIMITED_BARREL_CONTAINER_TYPE.get(), MountedLimitedBarrelScreen::new);
 		MenuScreens.register(ModContent.MOUNTED_LIMITED_BARREL_SETTINGS_CONTAINER_TYPE.get(), MountedLimitedBarrelSettingsScreen::new);
+
+		TrashSlotScreenRegistry.registerScreen(MountedStorageScreen.class);
 	}
 }
