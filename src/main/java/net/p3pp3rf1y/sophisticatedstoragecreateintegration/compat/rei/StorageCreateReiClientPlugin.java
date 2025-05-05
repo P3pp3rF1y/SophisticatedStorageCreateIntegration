@@ -7,9 +7,9 @@ import me.shedaniel.rei.api.client.registry.screen.ScreenRegistry;
 import me.shedaniel.rei.api.client.registry.transfer.TransferHandlerRegistry;
 import me.shedaniel.rei.forge.REIPluginClient;
 import net.minecraft.client.renderer.Rect2i;
-import net.p3pp3rf1y.sophisticatedcore.compat.recipeviewers.rei.ClientTransferHandler;
-import net.p3pp3rf1y.sophisticatedcore.compat.recipeviewers.rei.SettingsGhostIngredientHandler;
-import net.p3pp3rf1y.sophisticatedcore.compat.recipeviewers.rei.StorageGhostIngredientHandler;
+import net.p3pp3rf1y.sophisticatedcore.compat.recipeviewers.rei.ReiCraftingContainerTransferHandler;
+import net.p3pp3rf1y.sophisticatedcore.compat.recipeviewers.rei.ReiSettingsGhostIngredientHandler;
+import net.p3pp3rf1y.sophisticatedcore.compat.recipeviewers.rei.ReiStorageGhostIngredientHandler;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.client.MountedStorageScreen;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.client.MountedStorageSettingsScreen;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.common.MountedStorageContainerMenu;
@@ -35,12 +35,12 @@ public class StorageCreateReiClientPlugin implements REIClientPlugin {
 
 	@Override
 	public void registerScreens(ScreenRegistry registry) {
-		registry.registerDraggableStackVisitor(new StorageGhostIngredientHandler<>(MountedStorageScreen.class));
-		registry.registerDraggableStackVisitor(new SettingsGhostIngredientHandler<>(MountedStorageSettingsScreen.class));
+		registry.registerDraggableStackVisitor(new ReiStorageGhostIngredientHandler<>(MountedStorageScreen.class));
+		registry.registerDraggableStackVisitor(new ReiSettingsGhostIngredientHandler<>(MountedStorageSettingsScreen.class));
 	}
 
 	@Override
 	public void registerTransferHandlers(TransferHandlerRegistry registry) {
-		registry.register(ClientTransferHandler.crafting(MountedStorageContainerMenu.class));
+		registry.register(ReiCraftingContainerTransferHandler.crafting(MountedStorageContainerMenu.class));
 	}
 }
