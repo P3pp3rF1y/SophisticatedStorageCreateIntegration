@@ -12,9 +12,9 @@ import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
-import net.p3pp3rf1y.sophisticatedcore.compat.jei.CraftingContainerRecipeTransferHandlerBase;
-import net.p3pp3rf1y.sophisticatedcore.compat.jei.SettingsGhostIngredientHandler;
-import net.p3pp3rf1y.sophisticatedcore.compat.jei.StorageGhostIngredientHandler;
+import net.p3pp3rf1y.sophisticatedcore.compat.recipeviewers.jei.JeiCraftingContainerRecipeTransferHandlerBase;
+import net.p3pp3rf1y.sophisticatedcore.compat.recipeviewers.jei.JeiSettingsGhostIngredientHandler;
+import net.p3pp3rf1y.sophisticatedcore.compat.recipeviewers.jei.JeiStorageGhostIngredientHandler;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.SophisticatedStorageCreateIntegration;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.client.MountedStorageScreen;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.client.MountedStorageSettingsScreen;
@@ -25,7 +25,7 @@ import java.util.List;
 
 @SuppressWarnings("unused")
 @JeiPlugin
-public class StorageCreatePlugin implements IModPlugin {
+public class StorageCreateJeiPlugin implements IModPlugin {
 
 	@Override
 	public ResourceLocation getPluginUid() {
@@ -52,15 +52,15 @@ public class StorageCreatePlugin implements IModPlugin {
 			}
 		});
 
-		registration.addGhostIngredientHandler(MountedStorageScreen.class, new StorageGhostIngredientHandler<>());
-		registration.addGhostIngredientHandler(MountedStorageSettingsScreen.class, new SettingsGhostIngredientHandler<>());
+		registration.addGhostIngredientHandler(MountedStorageScreen.class, new JeiStorageGhostIngredientHandler<>());
+		registration.addGhostIngredientHandler(MountedStorageSettingsScreen.class, new JeiSettingsGhostIngredientHandler<>());
 	}
 
 	@Override
 	public void registerRecipeTransferHandlers(IRecipeTransferRegistration registration) {
 		IRecipeTransferHandlerHelper handlerHelper = registration.getTransferHelper();
 		IStackHelper stackHelper = registration.getJeiHelpers().getStackHelper();
-		registration.addRecipeTransferHandler(new CraftingContainerRecipeTransferHandlerBase<MountedStorageContainerMenu, RecipeHolder<CraftingRecipe>>(handlerHelper, stackHelper) {
+		registration.addRecipeTransferHandler(new JeiCraftingContainerRecipeTransferHandlerBase<MountedStorageContainerMenu, RecipeHolder<CraftingRecipe>>(handlerHelper, stackHelper) {
 			@Override
 			public Class<MountedStorageContainerMenu> getContainerClass() {
 				return MountedStorageContainerMenu.class;
