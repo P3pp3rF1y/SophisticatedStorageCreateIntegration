@@ -5,7 +5,8 @@ import com.simibubi.create.content.contraptions.behaviour.MovementContext;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.Vec3;
 import net.p3pp3rf1y.sophisticatedcore.compat.create.ContraptionHelper;
-import org.jetbrains.annotations.Nullable;
+
+import javax.annotation.Nullable;
 
 public class SophisticatedStorageMovementBehaviour implements MovementBehaviour {
 	public static final SophisticatedStorageMovementBehaviour INSTANCE = new SophisticatedStorageMovementBehaviour();
