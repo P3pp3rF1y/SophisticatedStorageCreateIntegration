@@ -361,4 +361,8 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 					buffer.writeBlockPos(localPos);
 				});
 	}
+
+	public void setShouldBeOpen(boolean b) {
+		storageHolder.setShouldBeOpen(b);
+	}
 }

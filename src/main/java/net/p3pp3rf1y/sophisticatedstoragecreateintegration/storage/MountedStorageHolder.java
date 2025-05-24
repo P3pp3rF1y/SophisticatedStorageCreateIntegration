@@ -37,6 +37,8 @@ import net.p3pp3rf1y.sophisticatedstorage.item.StorageBlockItem;
 import net.p3pp3rf1y.sophisticatedstorage.upgrades.hopper.HopperUpgradeItem;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.common.MountedLimitedBarrelContainerMenu;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.common.MountedStorageContainerMenu;
+import net.p3pp3rf1y.sophisticatedstoragecreateintegration.network.MountedStorageOpennessMessage;
+import net.p3pp3rf1y.sophisticatedstoragecreateintegration.network.StorageCreatePacketHandler;
 
 import javax.annotation.Nullable;
 import java.lang.ref.WeakReference;
@@ -292,6 +294,11 @@ public class MountedStorageHolder extends StorageHolderBase {
 		}
 	}
 
+	@Override
+	protected void sendOpenness(Entity entity) {
+		StorageCreatePacketHandler.INSTANCE.sendToAllTracking(new MountedStorageOpennessMessage(entity.getId(), isDoubleChest() && !isMainStorage ? chestOtherPartPos : localPos, isOpen()), entity);
+	}
+
 	private Optional<StorageHolderBase> getHolderOfOtherHalf() {
 		if (isChest() && chestOtherPartPos != BlockPos.ZERO) {
 			return getHolderOfOtherHalf(chestOtherPartPos).map(MountedStorageHolder.class::cast);
@@ -365,5 +372,13 @@ public class MountedStorageHolder extends StorageHolderBase {
 
 	public boolean isDoubleChest() {
 		return isChest() && chestOtherPartPos != BlockPos.ZERO;
+	}
+
+	@Override
+	public void setShouldBeOpen(boolean shouldBeOpen) {
+		super.setShouldBeOpen(shouldBeOpen);
+		if (isDoubleChest() && isMainStorage) {
+			getHolderOfOtherHalf().ifPresent(holder -> holder.setShouldBeOpen(shouldBeOpen));
+		}
 	}
 }
