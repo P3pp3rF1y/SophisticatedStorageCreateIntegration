@@ -394,6 +394,10 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 				});
 	}
 
+	public void setShouldBeOpen(boolean b) {
+		storageHolder.setShouldBeOpen(b);
+	}
+
 	public record NbtToComponentMapper<T>(String tagName, Supplier<DataComponentType<T>> type,
 										  NbtLevelAwareGetter<T> nbtValueGetter,
 										  NbtLevelAwareSetter<T> nbtValueSetter) {

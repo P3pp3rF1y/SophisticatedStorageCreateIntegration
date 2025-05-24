@@ -3,6 +3,7 @@ package net.p3pp3rf1y.sophisticatedstoragecreateintegration.storage;
 import com.simibubi.create.content.contraptions.AbstractContraptionEntity;
 import com.simibubi.create.content.contraptions.behaviour.MovementContext;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
@@ -35,6 +36,7 @@ import net.p3pp3rf1y.sophisticatedstorage.item.StorageBlockItem;
 import net.p3pp3rf1y.sophisticatedstorage.upgrades.hopper.HopperUpgradeItem;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.common.MountedLimitedBarrelContainerMenu;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.common.MountedStorageContainerMenu;
+import net.p3pp3rf1y.sophisticatedstoragecreateintegration.network.MountedStorageOpennessPayload;
 
 import javax.annotation.Nullable;
 import java.lang.ref.WeakReference;
@@ -285,6 +287,17 @@ public class MountedStorageHolder extends StorageHolderBase {
 		}
 	}
 
+	@Nullable
+	@Override
+	protected CustomPacketPayload createOpennessPayload() {
+		Entity entity = getEntity();
+		if (entity == null) {
+			return null;
+		}
+
+		return new MountedStorageOpennessPayload(getEntity().getId(), isDoubleChest() && !isMainStorage ? chestOtherPartPos : localPos, isOpen());
+	}
+
 	private Optional<StorageHolderBase> getHolderOfOtherHalf() {
 		if (isChest() && chestOtherPartPos != BlockPos.ZERO) {
 			return getHolderOfOtherHalf(chestOtherPartPos).map(MountedStorageHolder.class::cast);
@@ -357,5 +370,13 @@ public class MountedStorageHolder extends StorageHolderBase {
 
 	public boolean isDoubleChest() {
 		return isChest() && chestOtherPartPos != BlockPos.ZERO;
+	}
+
+	@Override
+	public void setShouldBeOpen(boolean shouldBeOpen) {
+		super.setShouldBeOpen(shouldBeOpen);
+		if (isDoubleChest() && isMainStorage) {
+			getHolderOfOtherHalf().ifPresent(holder -> holder.setShouldBeOpen(shouldBeOpen));
+		}
 	}
 }
