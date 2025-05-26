@@ -47,7 +47,7 @@ public class StorageCreateJeiPlugin implements IModPlugin {
 		registration.addGuiContainerHandler(MountedStorageSettingsScreen.class, new IGuiContainerHandler<>() {
 			@Override
 			public List<Rect2i> getGuiExtraAreas(MountedStorageSettingsScreen gui) {
-				return new ArrayList<>(gui.getSettingsTabControl().getTabRectangles());
+				return new ArrayList<>(gui.getExtendedControlsRectangles());
 			}
 		});
 
