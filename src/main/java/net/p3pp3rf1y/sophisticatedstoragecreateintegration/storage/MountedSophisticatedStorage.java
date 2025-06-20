@@ -18,7 +18,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
@@ -78,7 +77,7 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 		);
 		registerNbtToComponentMapper(StorageBlockItem.class, new NbtToComponentMapper<>("locked", ModDataComponents.LOCKED, CompoundTag::getBoolean, CompoundTag::putBoolean));
 		registerNbtToComponentMapper(StorageBlockItem.class, new NbtToComponentMapper<>("showLock", ModDataComponents.LOCK_VISIBLE, CompoundTag::getBoolean, CompoundTag::putBoolean));
-		registerNbtToComponentMapper(StorageBlockItem.class, new NbtToComponentMapper<>("showTier", ModDataComponents.SHOWS_TIER, CompoundTag::getBoolean, CompoundTag::putBoolean));
+		registerNbtToComponentMapper(StorageBlockItem.class, new NbtToComponentMapper<>("showTier", ModDataComponents.TIER_VISIBLE, CompoundTag::getBoolean, CompoundTag::putBoolean));
 		registerNbtToComponentMapper(StorageBlockItem.class, new NbtToComponentMapper<>("showUpgrades", ModDataComponents.UPGRADES_VISIBLE, CompoundTag::getBoolean, CompoundTag::putBoolean));
 		registerNbtToComponentMapper(BarrelBlockItem.class, new NbtToComponentMapper<>("showCounts", ModDataComponents.COUNTS_VISIBLE, CompoundTag::getBoolean, CompoundTag::putBoolean));
 		registerNbtToComponentMapper(BarrelBlockItem.class, new NbtToComponentMapper<>("showFillLevels", ModDataComponents.FILL_LEVELS_VISIBLE, CompoundTag::getBoolean, CompoundTag::putBoolean));
@@ -141,7 +140,7 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 		if (!rightChestPart) {
 			UUID id = UUID.randomUUID();
 			storageItem.set(ModCoreDataComponents.STORAGE_UUID, id);
-			MountedStorageData.get(id).setContents(contentsNbt);
+			MountedStorageData.get().setContents(id, contentsNbt);
 			StorageBlockItem.setNumberOfInventorySlots(storageItem, storageWrapper.getInventoryHandler().getSlots());
 			StorageBlockItem.setNumberOfUpgradeSlots(storageItem, storageWrapper.getUpgradeHandler().getSlots());
 		}
@@ -198,12 +197,16 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 	@Override
 	public void unmount(Level level, BlockState state, BlockPos pos, @Nullable BlockEntity be) {
 		if (getStorageStack().has(ModCoreDataComponents.STORAGE_UUID) && be instanceof StorageBlockEntity storageBe) {
-			UUID storageUuid = getStorageStack().get(ModCoreDataComponents.STORAGE_UUID);
+			UUID storageId = getStorageStack().get(ModCoreDataComponents.STORAGE_UUID);
 
-			MountedStorageData mountedStorageData = MountedStorageData.get(storageUuid);
+			if (storageId == null) {
+				return;
+			}
+
+			MountedStorageData mountedStorageData = MountedStorageData.get();
 			CompoundTag fullBeNbt = new CompoundTag();
 
-			CompoundTag contentNbt = mountedStorageData.getContents();
+			CompoundTag contentNbt = mountedStorageData.getContents(storageId);
 			contentNbt.put(StorageWrapper.RENDER_INFO_TAG, getStorageStack().getOrDefault(ModCoreDataComponents.RENDER_INFO_TAG, CustomData.EMPTY).copyTag());
 			SortBy sortBy = getStorageStack().get(ModCoreDataComponents.SORT_BY);
 			if (sortBy != null) {
@@ -232,7 +235,7 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 			if (getStorageStack().getItem() instanceof ITintableBlockItem tintableBlockItem) {
 				storageBe.getStorageWrapper().setColors(tintableBlockItem.getMainColor(getStorageStack()).orElse(-1), tintableBlockItem.getAccentColor(getStorageStack()).orElse(-1));
 			}
-			mountedStorageData.removeStorageContents();
+			mountedStorageData.removeStorageContents(storageId);
 
 			if (storageBe instanceof ChestBlockEntity chestBe && state.getValue(ChestBlock.TYPE) != ChestType.SINGLE) {
 				BlockState inWorldState = level.getBlockState(pos);
@@ -296,7 +299,7 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 		if (itemInHand.getItem() instanceof StorageTierUpgradeItem tierUpgradeItem) {
 			InteractionResult result = tryStorageTierUpgrade(player, itemInHand, tierUpgradeItem);
 			if (result != InteractionResult.PASS) {
-				return result == InteractionResult.SUCCESS;
+				return result.consumesAction();
 			}
 		} else if (itemInHand.getItem() instanceof StorageToolItem && tryToolInteraction(itemInHand)) {
 			return true;
@@ -319,7 +322,7 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 	}
 
 	private boolean tryToolInteraction(ItemStack itemInHand) {
-		boolean result = StorageHolderToolHandler.tryStorageToolInteract(itemInHand, getStorageHolder()) == InteractionResult.SUCCESS;
+		boolean result = StorageHolderToolHandler.tryStorageToolInteract(itemInHand, getStorageHolder()).consumesAction();
 		if (result && StorageToolItem.getMode(itemInHand) == StorageToolItem.Mode.LOCK) {
 			storageHolder.updateClientBlockRenderAfterNextSync();
 			storageHolder.sendStorageUpdatePayload();
@@ -328,7 +331,7 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 	}
 
 	private boolean tryAddStorageUpgrade(Player player, ItemStack itemInHand) {
-		return StorageBlockBase.tryAddSingleUpgrade(player, InteractionHand.MAIN_HAND, itemInHand, getStorageWrapper());
+		return StorageBlockBase.tryAddSingleUpgrade(player, itemInHand, getStorageWrapper()).consumesAction();
 	}
 
 	private boolean tryPaintStorage(Player player, ItemStack paintbrush) {
@@ -348,7 +351,7 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 	private InteractionResult tryStorageTierUpgrade(ServerPlayer player, ItemStack itemInHand, StorageTierUpgradeItem tierUpgradeItem) {
 		InteractionResult result = StorageHolderTierUpgradeHandler.upgrade(player, getStorageHolder(), itemInHand, tierUpgradeItem);
 
-		if (result == InteractionResult.SUCCESS) {
+		if (result.consumesAction()) {
 			if (getStorageStack().getItem() instanceof ChestBlockItem && ChestBlockItem.isDoubleChest(getStorageStack())) {
 				if (storageHolder.getMainStorageHolder() instanceof MountedStorageHolder mainStorageHolder) {
 					mainStorageHolder.updateState();

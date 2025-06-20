@@ -41,7 +41,6 @@ import net.p3pp3rf1y.sophisticatedstoragecreateintegration.network.MountedStorag
 import javax.annotation.Nullable;
 import java.lang.ref.WeakReference;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -89,8 +88,8 @@ public class MountedStorageHolder extends StorageHolderBase {
 	}
 
 	@Override
-	protected IStorageSavedData getStorageData(UUID storageId) {
-		return MountedStorageData.get(storageId);
+	protected IStorageSavedData getStorageData() {
+		return MountedStorageData.get();
 	}
 
 	@Override
@@ -117,9 +116,7 @@ public class MountedStorageHolder extends StorageHolderBase {
 	public void setLevel(Level level) {
 		this.level = new WeakReference<>(level);
 		if (!level.isClientSide()) {
-			getStorageWrapper().getRenderInfo().setDisplayItemsChangeListener(ri -> {
-				updateClientBlockRenderAfterNextSync();
-			});
+			getStorageWrapper().getRenderInfo().setDisplayItemsChangeListener(ri -> updateClientBlockRenderAfterNextSync());
 		}
 	}
 
@@ -165,7 +162,7 @@ public class MountedStorageHolder extends StorageHolderBase {
 	}
 
 	public void setContraptionEntity(Entity entity) {
-		this.contraptionEntity = new WeakReference<>(entity);
+		contraptionEntity = new WeakReference<>(entity);
 	}
 
 	@Nullable

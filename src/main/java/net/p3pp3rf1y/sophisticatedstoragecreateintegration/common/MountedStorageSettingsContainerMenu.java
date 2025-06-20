@@ -66,9 +66,9 @@ public class MountedStorageSettingsContainerMenu extends MountedStorageSettingsC
 
 	@Override
 	protected void updateFromContents(UUID uuid) {
-		MountedStorageData storage = MountedStorageData.get(uuid);
+		MountedStorageData storage = MountedStorageData.get();
 		if (storage.removeUpdatedStorageSettingsFlag(uuid)) {
-			CompoundTag contents = storage.getContents();
+			CompoundTag contents = storage.getContents(uuid);
 			storageWrapper.getSettingsHandler().reloadFrom(getSettingsTag(contents));
 		}
 	}
