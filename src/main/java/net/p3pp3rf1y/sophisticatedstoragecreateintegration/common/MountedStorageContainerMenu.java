@@ -80,7 +80,7 @@ public class MountedStorageContainerMenu extends MountedStorageContainerMenuBase
 
 	@Override
 	protected CompoundTag getSettingsTag(CompoundTag contents) {
-		return contents.getCompound(MovingStorageWrapper.SETTINGS_TAG);
+		return contents.getCompoundOrEmpty(MovingStorageWrapper.SETTINGS_TAG);
 	}
 
 	public float getSlotFillPercentage(int slot) {

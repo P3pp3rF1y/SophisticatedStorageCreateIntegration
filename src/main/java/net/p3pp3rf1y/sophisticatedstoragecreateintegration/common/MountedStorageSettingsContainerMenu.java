@@ -47,7 +47,7 @@ public class MountedStorageSettingsContainerMenu extends MountedStorageSettingsC
 
 	@Override
 	protected CompoundTag getSettingsTag(CompoundTag contents) {
-		return contents.getCompound(MovingStorageWrapper.SETTINGS_TAG);
+		return contents.getCompoundOrEmpty(MovingStorageWrapper.SETTINGS_TAG);
 	}
 
 	public static MountedStorageSettingsContainerMenu fromBuffer(int windowId, Inventory playerInventory, FriendlyByteBuf buffer) {
