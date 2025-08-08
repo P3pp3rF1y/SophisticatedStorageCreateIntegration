@@ -14,9 +14,9 @@ public class SophisticatedStorageSafeNbtWriter implements SafeNbtWriterRegistry.
 	public void writeSafe(BlockEntity be, CompoundTag tag, HolderLookup.Provider registries) {
 		if (be instanceof StorageBlockEntity storageBlockEntity) {
 			CompoundTag storageWrapperTag = new CompoundTag();
-			storageWrapperTag.putInt(StorageWrapper.MAIN_COLOR_TAG, storageBlockEntity.getStorageWrapper().getMainColor());
-			storageWrapperTag.putInt(StorageWrapper.ACCENT_COLOR_TAG, storageBlockEntity.getStorageWrapper().getAccentColor());
-			tag.put(StorageBlockEntity.STORAGE_WRAPPER_TAG, storageWrapperTag);
+			storageWrapperTag.putInt(StorageWrapper.MAIN_COLOR, storageBlockEntity.getStorageWrapper().getMainColor());
+			storageWrapperTag.putInt(StorageWrapper.ACCENT_COLOR, storageBlockEntity.getStorageWrapper().getAccentColor());
+			tag.put(StorageBlockEntity.STORAGE_WRAPPER, storageWrapperTag);
 		}
 	}
 

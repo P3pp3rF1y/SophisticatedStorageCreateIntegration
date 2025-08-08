@@ -2,18 +2,26 @@ package net.p3pp3rf1y.sophisticatedstoragecreateintegration.storage;
 
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+import com.mojang.datafixers.util.Pair;
+import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.MapCodec;
 import com.simibubi.create.content.contraptions.AbstractContraptionEntity;
 import com.simibubi.create.content.contraptions.Contraption;
 import com.simibubi.create.content.contraptions.behaviour.MovementContext;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.IntTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentSerialization;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.resources.RegistryOps;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -74,9 +82,11 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 	}
 
 	static {
+		RegistryOps<JsonElement> jsonOps = RegistryAccess.EMPTY.createSerializationContext(JsonOps.INSTANCE);
+
 		registerNbtToComponentMapper(StorageBlockItem.class, new NbtToComponentMapper<>("displayName", () -> DataComponents.CUSTOM_NAME,
-				(tag, key, level) -> Optional.ofNullable(Component.Serializer.fromJson(tag.getStringOr(key, ""), level.registryAccess())),
-				(tag, key, value, level) -> tag.putString(key, Component.Serializer.toJson(value, level.registryAccess())))
+				(tag, key, level) -> ComponentSerialization.CODEC.decode(jsonOps, JsonParser.parseString(tag.getStringOr(key, ""))).result().map(Pair::getFirst),
+				(tag, key, value, level) -> tag.putString(key, ComponentSerialization.CODEC.encodeStart(jsonOps, value).getOrThrow().toString()))
 		);
 		registerNbtToComponentMapper(StorageBlockItem.class, new NbtToComponentMapper<>("locked", ModDataComponents.LOCKED, CompoundTag::getBoolean, CompoundTag::putBoolean));
 		registerNbtToComponentMapper(StorageBlockItem.class, new NbtToComponentMapper<>("showLock", ModDataComponents.LOCK_VISIBLE, CompoundTag::getBoolean, CompoundTag::putBoolean));
@@ -90,8 +100,8 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 		registerNbtToComponentMapper(WoodStorageBlockItem.class, new NbtToComponentMapper<>("woodType", ModDataComponents.WOOD_TYPE,
 				(tag, key) -> WoodType.values().filter(wt -> wt.name().equals(tag.getStringOr(key, ""))).findFirst(),
 				(tag, key, value) -> tag.putString(key, value.name())));
-		registerNbtToComponentMapper(WoodStorageBlockItem.class, new NbtToComponentMapper<>(WoodStorageBlockEntity.PACKED_TAG, ModDataComponents.PACKED, CompoundTag::getBoolean, CompoundTag::putBoolean));
-		registerNbtToComponentMapper(BarrelBlockItem.class, new NbtToComponentMapper<>(BarrelBlockEntity.MATERIALS_TAG, ModDataComponents.BARREL_MATERIALS,
+		registerNbtToComponentMapper(WoodStorageBlockItem.class, new NbtToComponentMapper<>(WoodStorageBlockEntity.PACKED, ModDataComponents.PACKED, CompoundTag::getBoolean, CompoundTag::putBoolean));
+		registerNbtToComponentMapper(BarrelBlockItem.class, new NbtToComponentMapper<>(BarrelBlockEntity.MATERIALS, ModDataComponents.BARREL_MATERIALS,
 				(tag, key, level) -> NBTHelper.getMap(tag, key, BarrelMaterial::fromName, (bm, t) -> t.asString().map(ResourceLocation::parse)),
 				(tag, key, value, level) -> NBTHelper.putMap(tag, key, value, BarrelMaterial::getSerializedName, resourceLocation -> StringTag.valueOf(resourceLocation.toString()))));
 	}
@@ -132,13 +142,13 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 		CompoundTag fullBeNbt = storage.saveWithoutMetadata(level.registryAccess());
 
 		CompoundTag contentsNbt = new CompoundTag();
-		CompoundTag storageWrapperNbt = fullBeNbt.getCompoundOrEmpty(StorageBlockEntity.STORAGE_WRAPPER_TAG);
+		CompoundTag storageWrapperNbt = fullBeNbt.getCompoundOrEmpty(StorageBlockEntity.STORAGE_WRAPPER);
 		contentsNbt.put(StorageWrapper.CONTENTS_TAG, storageWrapperNbt.getCompoundOrEmpty(StorageWrapper.CONTENTS_TAG));
 		contentsNbt.put(StorageWrapper.SETTINGS_TAG, storageWrapperNbt.getCompoundOrEmpty(StorageWrapper.SETTINGS_TAG));
 		storageItem.set(ModCoreDataComponents.RENDER_INFO_TAG, storageWrapperNbt.getCompound(StorageWrapper.RENDER_INFO_TAG).map(CustomData::of).orElse(CustomData.EMPTY));
-		storageItem.set(ModCoreDataComponents.SORT_BY, NBTHelper.getString(storageWrapperNbt, StorageWrapper.SORT_BY_TAG).map(SortBy::fromName).orElse(SortBy.NAME));
-		storageItem.set(ModCoreDataComponents.NUMBER_OF_INVENTORY_SLOTS, storageWrapperNbt.getIntOr(StorageWrapper.NUMBER_OF_INVENTORY_SLOTS_TAG, 0));
-		storageItem.set(ModCoreDataComponents.NUMBER_OF_UPGRADE_SLOTS, storageWrapperNbt.getIntOr(StorageWrapper.NUMBER_OF_UPGRADE_SLOTS_TAG, 0));
+		storageItem.set(ModCoreDataComponents.SORT_BY, NBTHelper.getString(storageWrapperNbt, StorageWrapper.SORT_BY).map(SortBy::fromName).orElse(SortBy.NAME));
+		storageItem.set(ModCoreDataComponents.NUMBER_OF_INVENTORY_SLOTS, storageWrapperNbt.getIntOr(StorageWrapper.NUMBER_OF_INVENTORY_SLOTS, 0));
+		storageItem.set(ModCoreDataComponents.NUMBER_OF_UPGRADE_SLOTS, storageWrapperNbt.getIntOr(StorageWrapper.NUMBER_OF_UPGRADE_SLOTS, 0));
 
 		if (!rightChestPart) {
 			UUID id = UUID.randomUUID();
@@ -213,17 +223,17 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 			contentNbt.put(StorageWrapper.RENDER_INFO_TAG, getStorageStack().getOrDefault(ModCoreDataComponents.RENDER_INFO_TAG, CustomData.EMPTY).copyTag());
 			SortBy sortBy = getStorageStack().get(ModCoreDataComponents.SORT_BY);
 			if (sortBy != null) {
-				contentNbt.putString(StorageWrapper.SORT_BY_TAG, sortBy.getSerializedName());
+				contentNbt.putString(StorageWrapper.SORT_BY, sortBy.getSerializedName());
 			}
 			Integer numberOfInventorySlots = getStorageStack().get(ModCoreDataComponents.NUMBER_OF_INVENTORY_SLOTS);
 			if (numberOfInventorySlots != null) {
-				contentNbt.putInt(StorageWrapper.NUMBER_OF_INVENTORY_SLOTS_TAG, numberOfInventorySlots);
+				contentNbt.putInt(StorageWrapper.NUMBER_OF_INVENTORY_SLOTS, numberOfInventorySlots);
 			}
 			Integer numberOfUpgradeSlots = getStorageStack().get(ModCoreDataComponents.NUMBER_OF_UPGRADE_SLOTS);
 			if (numberOfUpgradeSlots != null) {
-				contentNbt.putInt(StorageWrapper.NUMBER_OF_UPGRADE_SLOTS_TAG, numberOfUpgradeSlots);
+				contentNbt.putInt(StorageWrapper.NUMBER_OF_UPGRADE_SLOTS, numberOfUpgradeSlots);
 			}
-			fullBeNbt.put(StorageBlockEntity.STORAGE_WRAPPER_TAG, contentNbt);
+			fullBeNbt.put(StorageBlockEntity.STORAGE_WRAPPER, contentNbt);
 
 			for (Map.Entry<Class<? extends Item>, NbtToComponentMapper<?>> entry : NBT_TO_COMPONENT_MAPPERS.entries()) {
 				if (entry.getKey().isInstance(getStorageStack().getItem())) {
@@ -290,7 +300,7 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 			return false;
 		}
 
-		ServerLevel level = player.serverLevel();
+		ServerLevel level = player.level();
 
 		BlockPos localPos = info.pos();
 		if (info.state().getBlock() instanceof ChestBlock && info.state().getValue(ChestBlock.TYPE) == ChestType.LEFT) {

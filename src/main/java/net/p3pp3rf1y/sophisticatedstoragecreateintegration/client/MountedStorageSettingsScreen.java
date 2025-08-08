@@ -3,7 +3,7 @@ package net.p3pp3rf1y.sophisticatedstoragecreateintegration.client;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import net.p3pp3rf1y.sophisticatedcore.client.gui.utils.Position;
 import net.p3pp3rf1y.sophisticatedcore.common.gui.SettingsContainerMenu;
 import net.p3pp3rf1y.sophisticatedcore.settings.StorageSettingsTabControlBase;
@@ -28,7 +28,7 @@ public class MountedStorageSettingsScreen extends StorageSettingsScreen {
 
 	@Override
 	protected void sendStorageInventoryScreenOpenMessage() {
-		PacketDistributor.sendToServer(new OpenMountedStorageInventoryPayload(entityId, localPos));
+		ClientPacketDistributor.sendToServer(new OpenMountedStorageInventoryPayload(entityId, localPos));
 	}
 
 	public static MountedStorageSettingsScreen constructScreen(SettingsContainerMenu<?> screenContainer, Inventory inventory, Component title) {
