@@ -5,6 +5,7 @@ import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.p3pp3rf1y.sophisticatedstoragecreateintegration.init.ModCompat;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.init.ModContent;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.network.StorageCreatePacketHandler;
 import org.apache.logging.log4j.LogManager;
@@ -20,10 +21,12 @@ public class SophisticatedStorageCreateIntegration {
 		IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
 		ModContent.registerHandler(modBus);
 		modBus.addListener(SophisticatedStorageCreateIntegration::setup);
+		ModCompat.initCompats();
 	}
 
 	private static void setup(FMLCommonSetupEvent event) {
 		StorageCreatePacketHandler.INSTANCE.init();
+		ModCompat.compatsSetup();
 	}
 
 	public static ResourceLocation getRL(String regName) {
