@@ -5,6 +5,7 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
+import net.p3pp3rf1y.sophisticatedstoragecreateintegration.init.ModCompat;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.init.ModContent;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.network.ModPayloads;
 import org.apache.logging.log4j.LogManager;
@@ -19,6 +20,7 @@ public class SophisticatedStorageCreateIntegration {
 	public SophisticatedStorageCreateIntegration(IEventBus modBus, Dist dist, ModContainer container) {
 		ModContent.registerHandler(modBus);
 		modBus.addListener(ModPayloads::registerPayloads);
+		ModCompat.register();
 	}
 
 	public static ResourceLocation getRL(String regName) {
