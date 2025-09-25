@@ -3,7 +3,6 @@ package net.p3pp3rf1y.sophisticatedstoragecreateintegration.init;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.p3pp3rf1y.sophisticatedcore.compat.trashslot.TrashSlotScreenRegistry;
-import net.p3pp3rf1y.sophisticatedstorage.client.ClientEventHandler;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.client.MountedLimitedBarrelScreen;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.client.MountedLimitedBarrelSettingsScreen;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.client.MountedStorageScreen;
@@ -11,8 +10,6 @@ import net.p3pp3rf1y.sophisticatedstoragecreateintegration.client.MountedStorage
 
 public class ModContentClient {
 	public static void registerHandlers(IEventBus modBus) {
-		ClientEventHandler.addSortScreenMatcher(screen -> screen instanceof MountedStorageScreen);
-
 		modBus.addListener(ModContentClient::onMenuScreenRegister);
 	}
 
