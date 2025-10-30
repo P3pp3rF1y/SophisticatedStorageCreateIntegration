@@ -3,7 +3,6 @@ package net.p3pp3rf1y.sophisticatedstoragecreateintegration.storage;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
 import com.mojang.serialization.MapCodec;
-import com.simibubi.create.content.contraptions.AbstractContraptionEntity;
 import com.simibubi.create.content.contraptions.Contraption;
 import com.simibubi.create.content.contraptions.behaviour.MovementContext;
 import net.minecraft.core.BlockPos;
@@ -175,19 +174,9 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 	}
 
 	@Override
-	protected void afterInitialSync() {
-		storageHolder.refreshRenderBlockEntity();
-	}
-
-	@Override
 	public void updateWithSyncedStorageStack(ItemStack storageStack, boolean refreshBlockRender) {
 		storageHolder.setStorageItem(storageStack);
-		storageHolder.refreshRenderBlockEntity();
-		if (refreshBlockRender) {
-			if (storageHolder.getEntity() instanceof AbstractContraptionEntity contraptionEntity) {
-				contraptionEntity.getContraption().deferInvalidate = true;
-			}
-		}
+		storageHolder.refreshRenders(refreshBlockRender);
 	}
 
 	@Override
