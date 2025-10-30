@@ -7,7 +7,6 @@ import com.google.gson.JsonParser;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.MapCodec;
-import com.simibubi.create.content.contraptions.AbstractContraptionEntity;
 import com.simibubi.create.content.contraptions.Contraption;
 import com.simibubi.create.content.contraptions.behaviour.MovementContext;
 import net.minecraft.core.BlockPos;
@@ -18,9 +17,7 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.IntTag;
 import net.minecraft.nbt.StringTag;
-import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentSerialization;
-import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.resources.RegistryOps;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -187,19 +184,9 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 	}
 
 	@Override
-	protected void afterInitialSync() {
-		storageHolder.refreshRenderBlockEntity();
-	}
-
-	@Override
 	public void updateWithSyncedStorageStack(ItemStack storageStack, boolean refreshBlockRender) {
 		storageHolder.setStorageItem(storageStack);
-		storageHolder.refreshRenderBlockEntity();
-		if (refreshBlockRender) {
-			if (storageHolder.getEntity() instanceof AbstractContraptionEntity contraptionEntity) {
-				contraptionEntity.getContraption().deferInvalidate = true;
-			}
-		}
+		storageHolder.refreshRenders(refreshBlockRender);
 	}
 
 	@Override
