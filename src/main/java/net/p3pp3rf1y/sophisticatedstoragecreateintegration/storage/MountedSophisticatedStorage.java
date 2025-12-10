@@ -30,7 +30,6 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -38,7 +37,8 @@ import net.minecraft.world.level.block.state.properties.ChestType;
 import net.minecraft.world.level.block.state.properties.WoodType;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.items.IItemHandlerModifiable;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.item.ItemResource;
 import net.p3pp3rf1y.sophisticatedcore.api.IStorageWrapper;
 import net.p3pp3rf1y.sophisticatedcore.common.gui.SophisticatedMenuProvider;
 import net.p3pp3rf1y.sophisticatedcore.common.gui.SortBy;
@@ -46,9 +46,12 @@ import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageBase;
 import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageContainerMenuBase;
 import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageData;
 import net.p3pp3rf1y.sophisticatedcore.init.ModCoreDataComponents;
+import net.p3pp3rf1y.sophisticatedcore.inventory.ContainerContents;
+import net.p3pp3rf1y.sophisticatedcore.renderdata.RenderData;
 import net.p3pp3rf1y.sophisticatedcore.settings.itemdisplay.ItemDisplaySettingsCategory;
 import net.p3pp3rf1y.sophisticatedcore.upgrades.UpgradeItemBase;
 import net.p3pp3rf1y.sophisticatedcore.util.NBTHelper;
+import net.p3pp3rf1y.sophisticatedcore.util.ValueIOHelper;
 import net.p3pp3rf1y.sophisticatedcore.util.WorldHelper;
 import net.p3pp3rf1y.sophisticatedstorage.block.*;
 import net.p3pp3rf1y.sophisticatedstorage.entity.MovingStorageWrapper;
@@ -138,11 +141,10 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 
 		CompoundTag fullBeNbt = storage.saveWithoutMetadata(level.registryAccess());
 
-		CompoundTag contentsNbt = new CompoundTag();
+		ContainerContents contents = storage.getStorageWrapper().getContents().copy();
+		RenderData renderData = storage.getStorageWrapper().getRenderDataHandler().getData().copy();
 		CompoundTag storageWrapperNbt = fullBeNbt.getCompoundOrEmpty(StorageBlockEntity.STORAGE_WRAPPER);
-		contentsNbt.put(StorageWrapper.CONTENTS_TAG, storageWrapperNbt.getCompoundOrEmpty(StorageWrapper.CONTENTS_TAG));
-		contentsNbt.put(StorageWrapper.SETTINGS_TAG, storageWrapperNbt.getCompoundOrEmpty(StorageWrapper.SETTINGS_TAG));
-		storageItem.set(ModCoreDataComponents.RENDER_INFO_TAG, storageWrapperNbt.getCompound(StorageWrapper.RENDER_INFO_TAG).map(CustomData::of).orElse(CustomData.EMPTY));
+		storageItem.set(ModCoreDataComponents.RENDER_DATA, renderData);
 		storageItem.set(ModCoreDataComponents.SORT_BY, NBTHelper.getString(storageWrapperNbt, StorageWrapper.SORT_BY).map(SortBy::fromName).orElse(SortBy.NAME));
 		storageItem.set(ModCoreDataComponents.NUMBER_OF_INVENTORY_SLOTS, storageWrapperNbt.getIntOr(StorageWrapper.NUMBER_OF_INVENTORY_SLOTS, 0));
 		storageItem.set(ModCoreDataComponents.NUMBER_OF_UPGRADE_SLOTS, storageWrapperNbt.getIntOr(StorageWrapper.NUMBER_OF_UPGRADE_SLOTS, 0));
@@ -150,9 +152,9 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 		if (!rightChestPart) {
 			UUID id = UUID.randomUUID();
 			storageItem.set(ModCoreDataComponents.STORAGE_UUID, id);
-			MountedStorageData.get().setContents(id, contentsNbt);
-			StorageBlockItem.setNumberOfInventorySlots(storageItem, storageWrapper.getInventoryHandler().getSlots());
-			StorageBlockItem.setNumberOfUpgradeSlots(storageItem, storageWrapper.getUpgradeHandler().getSlots());
+			MountedStorageData.get().setContents(id, contents);
+			StorageBlockItem.setNumberOfInventorySlots(storageItem, storageWrapper.getInventoryHandler().size());
+			StorageBlockItem.setNumberOfUpgradeSlots(storageItem, storageWrapper.getUpgradeHandler().size());
 		}
 
 		for (var entry : NBT_TO_COMPONENT_MAPPERS.entries()) {
@@ -206,8 +208,10 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 			MountedStorageData mountedStorageData = MountedStorageData.get();
 			CompoundTag fullBeNbt = new CompoundTag();
 
-			CompoundTag contentNbt = mountedStorageData.getContents(storageId);
-			contentNbt.put(StorageWrapper.RENDER_INFO_TAG, getStorageStack().getOrDefault(ModCoreDataComponents.RENDER_INFO_TAG, CustomData.EMPTY).copyTag());
+			CompoundTag contentNbt = ValueIOHelper.collectOutputToTag(level.registryAccess(), out -> {
+				out.store(StorageWrapper.CONTENTS, ContainerContents.CODEC, mountedStorageData.getContents(storageId));
+				out.store(StorageWrapper.RENDER_DATA, RenderData.CODEC, getStorageStack().getOrDefault(ModCoreDataComponents.RENDER_DATA, RenderData.EMPTY).copy());
+			});
 			SortBy sortBy = getStorageStack().get(ModCoreDataComponents.SORT_BY);
 			if (sortBy != null) {
 				contentNbt.putString(StorageWrapper.SORT_BY, sortBy.getSerializedName());
@@ -231,7 +235,7 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 			if (state.getBlock() instanceof ChestBlock && state.getValue(ChestBlock.TYPE) != ChestType.SINGLE) { //prevent double chest update shape changes dropping items before both parts loaded
 				storageBe.setBeingUpgraded(true);
 			}
-			storageBe.loadAdditional(fullBeNbt, level.registryAccess());
+			storageBe.loadAdditional(ValueIOHelper.inputFromCompoundTag(level.registryAccess(), fullBeNbt));
 			if (getStorageStack().getItem() instanceof ITintableBlockItem tintableBlockItem) {
 				storageBe.getStorageWrapper().setColors(tintableBlockItem.getMainColor(getStorageStack()).orElse(-1), tintableBlockItem.getAccentColor(getStorageStack()).orElse(-1));
 			}
@@ -385,7 +389,7 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 	}
 
 	@Override
-	protected IItemHandlerModifiable getExternalItemHandler() {
+	protected ResourceHandler<ItemResource> getExternalItemHandler() {
 		return getStorageHolder().getMainStorageWrapper().getInventoryForInputOutput();
 	}
 

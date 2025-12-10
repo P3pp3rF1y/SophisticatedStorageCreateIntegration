@@ -117,7 +117,7 @@ public class MountedStorageHolder extends StorageHolderBase {
 	public void setLevel(Level level) {
 		this.level = new WeakReference<>(level);
 		if (!level.isClientSide()) {
-			getStorageWrapper().getRenderInfo().setDisplayItemsChangeListener(ri -> updateClientBlockRenderAfterNextSync());
+			getStorageWrapper().getRenderDataHandler().setDisplayItemsChangeListener(ri -> updateClientBlockRenderAfterNextSync());
 		}
 	}
 

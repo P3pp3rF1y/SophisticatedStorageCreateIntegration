@@ -8,14 +8,12 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.MenuType;
-import net.p3pp3rf1y.sophisticatedcore.api.IStorageWrapper;
 import net.p3pp3rf1y.sophisticatedcore.common.gui.ISyncedContainer;
-import net.p3pp3rf1y.sophisticatedcore.common.gui.StorageContainerMenuBase;
 import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageContainerMenuBase;
-import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageContentsPayload;
 import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageSettingsContainerMenuBase;
+import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageSettingsPayload;
+import net.p3pp3rf1y.sophisticatedcore.inventory.ContainerContents;
 import net.p3pp3rf1y.sophisticatedcore.settings.itemdisplay.ItemDisplaySettingsCategory;
-import net.p3pp3rf1y.sophisticatedcore.upgrades.UpgradeHandler;
 import net.p3pp3rf1y.sophisticatedcore.util.NoopStorageWrapper;
 import net.p3pp3rf1y.sophisticatedstorage.client.gui.StorageTranslationHelper;
 import net.p3pp3rf1y.sophisticatedstorage.entity.MovingStorageWrapper;
@@ -55,16 +53,11 @@ public class MountedStorageContainerMenu extends MountedStorageContainerMenuBase
 	}
 
 	@Override
-	protected StorageContainerMenuBase<IStorageWrapper>.StorageUpgradeSlot instantiateUpgradeSlot(UpgradeHandler upgradeHandler, int slotIndex) {
-		return new StorageUpgradeSlot(upgradeHandler, slotIndex) {
-			@Override
-			protected void onUpgradeChanged() {
-				if (player.level().isClientSide()) {
-					return;
-				}
-				storageWrapper.getSettingsHandler().getTypeCategory(ItemDisplaySettingsCategory.class).itemsChanged();
-			}
-		};
+	protected void onUpgradeChanged() {
+		if (player.level().isClientSide()) {
+			return;
+		}
+		storageWrapper.getSettingsHandler().getTypeCategory(ItemDisplaySettingsCategory.class).itemsChanged();
 	}
 
 	@Override
@@ -80,11 +73,11 @@ public class MountedStorageContainerMenu extends MountedStorageContainerMenuBase
 
 	@Override
 	protected CompoundTag getSettingsTag(CompoundTag contents) {
-		return contents.getCompoundOrEmpty(MovingStorageWrapper.SETTINGS_TAG);
+		return contents.getCompoundOrEmpty(MovingStorageWrapper.SETTINGS);
 	}
 
 	public float getSlotFillPercentage(int slot) {
-		List<Float> slotFillRatios = getMountedStorage().map(m -> m.getStorageWrapper().getRenderInfo().getItemDisplayRenderInfo().getSlotFillRatios()).orElse(Collections.emptyList());
+		List<Float> slotFillRatios = getMountedStorage().map(m -> m.getStorageWrapper().getRenderDataHandler().getDisplayData().slotFillRatios()).orElse(Collections.emptyList());
 		return slot > -1 && slot < slotFillRatios.size() ? slotFillRatios.get(slot) : 0;
 	}
 
@@ -94,7 +87,7 @@ public class MountedStorageContainerMenu extends MountedStorageContainerMenuBase
 	}
 
 	@Override
-	protected CustomPacketPayload instantiateSettingsPayload(UUID uuid, CompoundTag settingsContents) {
-		return new MountedStorageContentsPayload(uuid, settingsContents);
+	protected CustomPacketPayload instantiateSettingsPayload(UUID uuid, ContainerContents.SettingsData settingsData) {
+		return new MountedStorageSettingsPayload(uuid, settingsData);
 	}
 }

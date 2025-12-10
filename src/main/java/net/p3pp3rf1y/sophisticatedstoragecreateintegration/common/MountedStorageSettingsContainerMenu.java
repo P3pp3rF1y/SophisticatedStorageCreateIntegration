@@ -11,6 +11,7 @@ import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.level.Level;
 import net.p3pp3rf1y.sophisticatedcore.api.IStorageWrapper;
 import net.p3pp3rf1y.sophisticatedcore.compat.create.*;
+import net.p3pp3rf1y.sophisticatedcore.inventory.ContainerContents;
 import net.p3pp3rf1y.sophisticatedcore.util.NoopStorageWrapper;
 import net.p3pp3rf1y.sophisticatedstorage.entity.MovingStorageWrapper;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.init.ModContent;
@@ -20,6 +21,7 @@ import java.util.UUID;
 
 public class MountedStorageSettingsContainerMenu extends MountedStorageSettingsContainerMenuBase {
 	private final boolean doubleChest;
+
 	protected MountedStorageSettingsContainerMenu(int windowId, Player player, int contraptionEntityId, BlockPos localPos) {
 		this(ModContent.MOUNTED_STORAGE_SETTINGS_CONTAINER_TYPE.get(), windowId, player, contraptionEntityId, localPos);
 	}
@@ -47,7 +49,7 @@ public class MountedStorageSettingsContainerMenu extends MountedStorageSettingsC
 
 	@Override
 	protected CompoundTag getSettingsTag(CompoundTag contents) {
-		return contents.getCompoundOrEmpty(MovingStorageWrapper.SETTINGS_TAG);
+		return contents.getCompoundOrEmpty(MovingStorageWrapper.SETTINGS);
 	}
 
 	public static MountedStorageSettingsContainerMenu fromBuffer(int windowId, Inventory playerInventory, FriendlyByteBuf buffer) {
@@ -60,16 +62,16 @@ public class MountedStorageSettingsContainerMenu extends MountedStorageSettingsC
 	}
 
 	@Override
-	protected CustomPacketPayload instantiateSettingsPayload(UUID uuid, CompoundTag settingsContents) {
-		return new MountedStorageContentsPayload(uuid, settingsContents);
+	protected CustomPacketPayload instantiateSettingsPayload(UUID uuid, ContainerContents.SettingsData settingsContents) {
+		return new MountedStorageSettingsPayload(uuid, settingsContents);
 	}
 
 	@Override
 	protected void updateFromContents(UUID uuid) {
 		MountedStorageData storage = MountedStorageData.get();
 		if (storage.removeUpdatedStorageSettingsFlag(uuid)) {
-			CompoundTag contents = storage.getContents(uuid);
-			storageWrapper.getSettingsHandler().reloadFrom(getSettingsTag(contents));
+			ContainerContents contents = storage.getContents(uuid);
+			storageWrapper.getSettingsHandler().reloadFrom(contents.settings());
 		}
 	}
 }
