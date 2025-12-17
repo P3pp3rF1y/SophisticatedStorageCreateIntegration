@@ -13,11 +13,10 @@ import net.p3pp3rf1y.sophisticatedcore.compat.create.ContraptionHelper;
 import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageBase;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.SophisticatedStorageCreateIntegration;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.storage.MountedSophisticatedStorage;
-
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 public record MountedStorageOpennessPayload(int contraptionEntityId, BlockPos localPos, boolean shouldBeOpen) implements CustomPacketPayload {
-	public static final Type<MountedStorageOpennessPayload> TYPE = new Type<>(SophisticatedStorageCreateIntegration.getRL("storage_openness"));
+	public static final Type<MountedStorageOpennessPayload> TYPE = new Type<>(SophisticatedStorageCreateIntegration.getIdentifier("storage_openness"));
 	public static final StreamCodec<RegistryFriendlyByteBuf, MountedStorageOpennessPayload> STREAM_CODEC = StreamCodec.composite(
 			ByteBufCodecs.INT,
 			MountedStorageOpennessPayload::contraptionEntityId,

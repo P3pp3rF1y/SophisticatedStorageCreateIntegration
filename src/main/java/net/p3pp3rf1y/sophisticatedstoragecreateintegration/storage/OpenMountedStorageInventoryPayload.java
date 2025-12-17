@@ -16,7 +16,7 @@ import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageBase;
 
 public record OpenMountedStorageInventoryPayload(int contraptionEntityId,
 												 BlockPos localPos) implements CustomPacketPayload {
-	public static final Type<OpenMountedStorageInventoryPayload> TYPE = new Type<>(SophisticatedCore.getRL("open_mounted_storage_inventory"));
+	public static final Type<OpenMountedStorageInventoryPayload> TYPE = new Type<>(SophisticatedCore.getIdentifier("open_mounted_storage_inventory"));
 	public static final StreamCodec<ByteBuf, OpenMountedStorageInventoryPayload> STREAM_CODEC = StreamCodec.composite(
 			ByteBufCodecs.INT,
 			OpenMountedStorageInventoryPayload::contraptionEntityId,

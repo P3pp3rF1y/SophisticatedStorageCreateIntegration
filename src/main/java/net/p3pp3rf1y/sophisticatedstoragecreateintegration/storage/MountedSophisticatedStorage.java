@@ -18,8 +18,8 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.IntTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.network.chat.ComponentSerialization;
+import net.minecraft.resources.Identifier;
 import net.minecraft.resources.RegistryOps;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
@@ -63,8 +63,8 @@ import net.p3pp3rf1y.sophisticatedstorage.item.*;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.common.MountedLimitedBarrelContainerMenu;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.common.MountedStorageContainerMenu;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.init.ModContent;
+import org.jspecify.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -102,8 +102,8 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 				(tag, key, value) -> tag.putString(key, value.name())));
 		registerNbtToComponentMapper(WoodStorageBlockItem.class, new NbtToComponentMapper<>(WoodStorageBlockEntity.PACKED, ModDataComponents.PACKED, CompoundTag::getBoolean, CompoundTag::putBoolean));
 		registerNbtToComponentMapper(BarrelBlockItem.class, new NbtToComponentMapper<>(BarrelBlockEntity.MATERIALS, ModDataComponents.BARREL_MATERIALS,
-				(tag, key, level) -> NBTHelper.getMap(tag, key, BarrelMaterial::fromName, (bm, t) -> t.asString().map(ResourceLocation::parse)),
-				(tag, key, value, level) -> NBTHelper.putMap(tag, key, value, BarrelMaterial::getSerializedName, resourceLocation -> StringTag.valueOf(resourceLocation.toString()))));
+				(tag, key, level) -> NBTHelper.getMap(tag, key, BarrelMaterial::fromName, (bm, t) -> t.asString().map(Identifier::parse)),
+				(tag, key, value, level) -> NBTHelper.putMap(tag, key, value, BarrelMaterial::getSerializedName, identifier -> StringTag.valueOf(identifier.toString()))));
 	}
 
 	private final MountedStorageHolder storageHolder;
