@@ -11,7 +11,7 @@ public class StorageCreatePacketHandler extends PacketHandler {
 	}
 
 	@Override
-	public void init() {
+	public void registerMessages() {
 		registerMessage(MountedStorageOpennessMessage.class, MountedStorageOpennessMessage::encode, MountedStorageOpennessMessage::decode, MountedStorageOpennessMessage::onMessage);
 	}
 }
