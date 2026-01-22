@@ -1,7 +1,7 @@
 // Auto generated package-info by MCP
 
 @ParametersAreNonnullByDefault @NullMarked
-package net.p3pp3rf1y.sophisticatedstoragecreateintegration.compat.rei;
+package net.p3pp3rf1y.sophisticatedstoragecreateintegration.compat.recipeviewers.rei;
 
 import org.jspecify.annotations.NullMarked;
 
