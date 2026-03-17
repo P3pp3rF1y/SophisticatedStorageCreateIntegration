@@ -49,6 +49,7 @@ import net.p3pp3rf1y.sophisticatedcore.init.ModCoreDataComponents;
 import net.p3pp3rf1y.sophisticatedcore.settings.itemdisplay.ItemDisplaySettingsCategory;
 import net.p3pp3rf1y.sophisticatedcore.upgrades.UpgradeItemBase;
 import net.p3pp3rf1y.sophisticatedcore.util.NBTHelper;
+import net.p3pp3rf1y.sophisticatedcore.util.ValueIOHelper;
 import net.p3pp3rf1y.sophisticatedcore.util.WorldHelper;
 import net.p3pp3rf1y.sophisticatedstorage.block.*;
 import net.p3pp3rf1y.sophisticatedstorage.entity.MovingStorageWrapper;
@@ -231,7 +232,7 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 			if (state.getBlock() instanceof ChestBlock && state.getValue(ChestBlock.TYPE) != ChestType.SINGLE) { //prevent double chest update shape changes dropping items before both parts loaded
 				storageBe.setBeingUpgraded(true);
 			}
-			storageBe.loadAdditional(fullBeNbt, level.registryAccess());
+			storageBe.loadAdditional(ValueIOHelper.inputFromCompoundTag(level.registryAccess(), fullBeNbt));
 			if (getStorageStack().getItem() instanceof ITintableBlockItem tintableBlockItem) {
 				storageBe.getStorageWrapper().setColors(tintableBlockItem.getMainColor(getStorageStack()).orElse(-1), tintableBlockItem.getAccentColor(getStorageStack()).orElse(-1));
 			}
