@@ -371,6 +371,13 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 	}
 
 	@Override
+	public void onContraptionDestroyed() {
+		if (getStorageStack().has(ModCoreDataComponents.STORAGE_UUID)) {
+			MountedStorageData.get(getStorageStack().get(ModCoreDataComponents.STORAGE_UUID)).removeStorageContents();
+		}
+	}
+
+	@Override
 	protected IItemHandlerModifiable getExternalItemHandler() {
 		return getStorageHolder().getMainStorageWrapper().getInventoryForInputOutput();
 	}
