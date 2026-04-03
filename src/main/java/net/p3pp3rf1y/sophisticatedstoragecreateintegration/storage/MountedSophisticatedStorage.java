@@ -336,6 +336,11 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 	}
 
 	@Override
+	public void onContraptionDestroyed() {
+		NBTHelper.getUniqueId(getStorageStack(), StorageWrapper.UUID_TAG).ifPresent(storageUuid -> MountedStorageData.get(storageUuid).removeStorageContents());
+	}
+
+	@Override
 	protected IItemHandlerModifiable getExternalItemHandler() {
 		return getStorageHolder().getMainStorageWrapper().getInventoryForInputOutput();
 	}
