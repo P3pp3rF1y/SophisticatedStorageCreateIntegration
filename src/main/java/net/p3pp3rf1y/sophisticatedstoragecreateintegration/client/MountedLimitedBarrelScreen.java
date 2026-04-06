@@ -19,8 +19,8 @@ public class MountedLimitedBarrelScreen extends MountedStorageScreen {
 	}
 
 	@Override
-	protected void renderLabels(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY) {
-		super.renderLabels(guiGraphics, mouseX, mouseY);
+	protected void extractLabels(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY) {
+		super.extractLabels(guiGraphics, mouseX, mouseY);
 		LimitedBarrelScreen.renderBars(font, imageWidth, getMenu(), guiGraphics, getMenu()::getSlotFillPercentage);
 	}
 

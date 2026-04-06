@@ -243,7 +243,7 @@ public class MountedStorageHolder extends StorageHolderBase {
 
 		Vec3 position = getPosition().add(0.5, 0.5, 0.5);
 
-		level.playSound(null, position.x(), position.y(), position.z(), sound, SoundSource.BLOCKS, 0.5F, level.random.nextFloat() * 0.1F + 0.9F);
+		level.playSound(null, position.x(), position.y(), position.z(), sound, SoundSource.BLOCKS, 0.5F, level.getRandom().nextFloat() * 0.1F + 0.9F);
 	}
 
 	void initEntityLevelAndPositions(MovementContext context) {
@@ -346,8 +346,8 @@ public class MountedStorageHolder extends StorageHolderBase {
 		if (getEntity() instanceof AbstractContraptionEntity contraptionEntity && getSyncedStorageStack().getItem() instanceof StorageBlockItem storageBlockItem) {
 			StructureTemplate.StructureBlockInfo blockInfo = contraptionEntity.getContraption().getBlocks().get(localPos);
 			BlockState newBlockState = storageBlockItem.getBlock().defaultBlockState();
-			for (var entry : blockInfo.state().getValues().entrySet()) {
-				newBlockState = setStateValue(newBlockState, entry.getKey(), entry.getValue());
+			for (var value : blockInfo.state().getValues().toList()) {
+				newBlockState = setStateValue(newBlockState, value.property(), value.value());
 			}
 			contraptionEntity.setBlock(localPos, new StructureTemplate.StructureBlockInfo(blockInfo.pos(), newBlockState, blockInfo.nbt()));
 		}
