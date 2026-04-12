@@ -241,11 +241,11 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 					attachedBe.setBeingUpgraded(false);
 					attachedBe.setMainPos(mainBe.getBlockPos());
 
-					mainBe.getStorageWrapper().onInit(level);
+					mainBe.getStorageWrapper().onInit();
 					mainBe.tryToAddToController();
 				});
 			} else {
-				storageBe.getStorageWrapper().onInit(level);
+				storageBe.getStorageWrapper().onInit();
 				storageBe.tryToAddToController();
 			}
 		}
