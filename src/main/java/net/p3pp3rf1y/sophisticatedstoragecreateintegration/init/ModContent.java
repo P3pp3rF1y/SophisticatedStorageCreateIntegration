@@ -2,6 +2,7 @@ package net.p3pp3rf1y.sophisticatedstoragecreateintegration.init;
 
 import com.simibubi.create.api.behaviour.movement.MovementBehaviour;
 import com.simibubi.create.api.contraption.storage.item.MountedItemStorageType;
+import com.simibubi.create.api.contraption.transformable.MovedBlockTransformerRegistries;
 import com.simibubi.create.api.registry.CreateBuiltInRegistries;
 import com.simibubi.create.api.schematic.nbt.SafeNbtWriterRegistry;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -26,6 +27,7 @@ import net.p3pp3rf1y.sophisticatedstoragecreateintegration.common.MountedStorage
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.schematic.SophisticatedStorageSafeNbtWriter;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.storage.MountedSophisticatedStorageType;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.storage.OpenMountedStorageInventoryPayload;
+import net.p3pp3rf1y.sophisticatedstoragecreateintegration.storage.SophisticatedChestBlockTransformer;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.storage.SophisticatedStorageMovementBehaviour;
 
 import java.util.function.Supplier;
@@ -67,6 +69,12 @@ public class ModContent {
 					MountedItemStorageType.REGISTRY.register(block, SOPHISTICATED_MOUNTED_STORAGE_TYPE.get());
 					MovementBehaviour.REGISTRY.register(block, SophisticatedStorageMovementBehaviour.INSTANCE);
 				});
+		MovedBlockTransformerRegistries.BLOCK_TRANSFORMERS.register(ModBlocks.CHEST.get(), SophisticatedChestBlockTransformer::transform);
+		MovedBlockTransformerRegistries.BLOCK_TRANSFORMERS.register(ModBlocks.COPPER_CHEST.get(), SophisticatedChestBlockTransformer::transform);
+		MovedBlockTransformerRegistries.BLOCK_TRANSFORMERS.register(ModBlocks.IRON_CHEST.get(), SophisticatedChestBlockTransformer::transform);
+		MovedBlockTransformerRegistries.BLOCK_TRANSFORMERS.register(ModBlocks.GOLD_CHEST.get(), SophisticatedChestBlockTransformer::transform);
+		MovedBlockTransformerRegistries.BLOCK_TRANSFORMERS.register(ModBlocks.DIAMOND_CHEST.get(), SophisticatedChestBlockTransformer::transform);
+		MovedBlockTransformerRegistries.BLOCK_TRANSFORMERS.register(ModBlocks.NETHERITE_CHEST.get(), SophisticatedChestBlockTransformer::transform);
 		SafeNbtWriterRegistry.REGISTRY.register(ModBlocks.CHEST_BLOCK_ENTITY_TYPE.get(), SophisticatedStorageSafeNbtWriter.Wooden.INSTANCE);
 		SafeNbtWriterRegistry.REGISTRY.register(ModBlocks.BARREL_BLOCK_ENTITY_TYPE.get(), SophisticatedStorageSafeNbtWriter.Wooden.INSTANCE);
 		SafeNbtWriterRegistry.REGISTRY.register(ModBlocks.LIMITED_BARREL_BLOCK_ENTITY_TYPE.get(), SophisticatedStorageSafeNbtWriter.Wooden.INSTANCE);
