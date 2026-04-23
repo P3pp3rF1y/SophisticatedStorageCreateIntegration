@@ -169,7 +169,6 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 			BlockState blockState = chestBlock.getBlockState();
 			if (blockState.getValue(ChestBlock.TYPE) != ChestType.SINGLE) {
 				ChestBlockItem.setDoubleChest(storageItem, true);
-				chestBlock.removeDoubleMainPos();
 			}
 		}
 
@@ -251,8 +250,6 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 					ChestBlockEntity attachedBe = chestType == ChestType.LEFT ? chestBe : otherHalfBe;
 					mainBe.setBeingUpgraded(false);
 					attachedBe.setBeingUpgraded(false);
-					attachedBe.setMainPos(mainBe.getBlockPos());
-
 					mainBe.getStorageWrapper().onInit(level);
 					mainBe.tryToAddToController();
 				});
