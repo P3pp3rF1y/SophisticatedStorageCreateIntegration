@@ -265,11 +265,6 @@ public class MountedStorageHolder extends StorageHolderBase {
 		if (isChest() && state.getValue(ChestBlock.TYPE) != ChestType.SINGLE) {
 			chestOtherPartPos = localPos.relative(ChestBlock.getConnectedDirection(state));
 			isMainStorage = state.getValue(ChestBlock.TYPE) == ChestType.RIGHT;
-			if (!isMainStorage && level.isClientSide()) {
-				if (abstractContraptionEntity.getContraption().getBlockEntityClientSide(localPos) instanceof ChestBlockEntity chestBlockEntity) {
-					chestBlockEntity.setMainPos(chestOtherPartPos);
-				}
-			}
 		}
 	}
 
