@@ -15,9 +15,11 @@ import org.apache.logging.log4j.Logger;
 public class SophisticatedStorageCreateIntegration {
 	public static final String MOD_ID = "sophisticatedstoragecreateintegration";
 	public static final Logger LOGGER = LogManager.getLogger(MOD_ID);
+	private static String networkProtocolVersion;
 
 	@SuppressWarnings("java:S1118") //needs to be public for mod to work
 	public SophisticatedStorageCreateIntegration(IEventBus modBus, Dist dist, ModContainer container) {
+		networkProtocolVersion = container.getModInfo().getVersion().toString();
 		ModContent.registerHandler(modBus);
 		modBus.addListener(ModPayloads::registerPayloads);
 		ModCompat.register();
@@ -29,5 +31,9 @@ public class SophisticatedStorageCreateIntegration {
 
 	public static String getRegistryName(String regName) {
 		return MOD_ID + ":" + regName;
+	}
+
+	public static String getNetworkProtocolVersion() {
+		return networkProtocolVersion;
 	}
 }

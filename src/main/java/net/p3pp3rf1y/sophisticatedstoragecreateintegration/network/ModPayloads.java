@@ -8,7 +8,7 @@ public class ModPayloads {
 	private ModPayloads() {}
 
 	public static void registerPayloads(final RegisterPayloadHandlersEvent event) {
-		final PayloadRegistrar registrar = event.registrar(SophisticatedStorageCreateIntegration.MOD_ID).versioned("1.0");
+		final PayloadRegistrar registrar = event.registrar(SophisticatedStorageCreateIntegration.MOD_ID).versioned(SophisticatedStorageCreateIntegration.getNetworkProtocolVersion());
 		registrar.playToClient(MountedStorageOpennessPayload.TYPE, MountedStorageOpennessPayload.STREAM_CODEC, MountedStorageOpennessPayload::handlePayload);
 	}
 }
