@@ -82,7 +82,7 @@ public class ModContent {
 	}
 
 	private static void registerPayloads(final RegisterPayloadHandlersEvent event) {
-		PayloadRegistrar registrar = event.registrar(SophisticatedStorageCreateIntegration.MOD_ID).versioned("1.0");
+		PayloadRegistrar registrar = event.registrar(SophisticatedStorageCreateIntegration.MOD_ID).versioned(SophisticatedStorageCreateIntegration.getNetworkProtocolVersion());
 		registrar.playToServer(OpenMountedStorageInventoryPayload.TYPE, OpenMountedStorageInventoryPayload.STREAM_CODEC, OpenMountedStorageInventoryPayload::handlePayload);
 	}
 }
