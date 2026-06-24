@@ -27,7 +27,6 @@ import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageData;
 import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageUpdatePayload;
 import net.p3pp3rf1y.sophisticatedcore.util.NoopStorageWrapper;
 import net.p3pp3rf1y.sophisticatedstorage.block.ChestBlock;
-import net.p3pp3rf1y.sophisticatedstorage.block.ChestBlockEntity;
 import net.p3pp3rf1y.sophisticatedstorage.block.StorageBlockEntity;
 import net.p3pp3rf1y.sophisticatedstorage.entity.MovingStorageWrapper;
 import net.p3pp3rf1y.sophisticatedstorage.entity.StorageHolderBase;
@@ -81,9 +80,9 @@ public class MountedStorageHolder extends StorageHolderBase {
 	@Override
 	protected boolean isOwnContainer(Player player) {
 		if (player.containerMenu instanceof MountedStorageContainerMenu mountedStorageContainerMenu) {
-			return mountedStorageContainerMenu.getContraptionEntity().map(c -> c == getEntity() &&
-					(mountedStorageContainerMenu.getLocalPos().equals(localPos) || mountedStorageContainerMenu.getLocalPos().equals(chestOtherPartPos))
-			).orElse(false);
+			return mountedStorageContainerMenu.getContraptionEntity().map(c -> c == getEntity()
+					&& (mountedStorageContainerMenu.getLocalPos().equals(localPos) || mountedStorageContainerMenu.getLocalPos().equals(chestOtherPartPos)))
+					.orElse(false);
 		}
 		return false;
 	}
@@ -130,7 +129,8 @@ public class MountedStorageHolder extends StorageHolderBase {
 		Level level = getLevel();
 		if (level instanceof ServerLevel) {
 			sendStorageUpdatePayload();
-		} else if (refreshRendersOnNextTick && level != null && level.isClientSide() && getRenderBlockEntity() != null && entity instanceof AbstractContraptionEntity contraptionEntity) {
+		} else if (refreshRendersOnNextTick && level != null && level.isClientSide() && getRenderBlockEntity() != null
+				&& entity instanceof AbstractContraptionEntity contraptionEntity) {
 			refreshRenders(contraptionEntity, true);
 			refreshRendersOnNextTick = false;
 		}
@@ -147,7 +147,8 @@ public class MountedStorageHolder extends StorageHolderBase {
 		if (entity == null || entity.level().isClientSide()) {
 			return;
 		}
-		PacketDistributor.sendToPlayersTrackingEntity(entity, new MountedStorageUpdatePayload(entity.getId(), localPos, getSyncedStorageStack(), refreshClientBlockRender && isBarrel()));
+		PacketDistributor.sendToPlayersTrackingEntity(entity,
+				new MountedStorageUpdatePayload(entity.getId(), localPos, getSyncedStorageStack(), refreshClientBlockRender && isBarrel()));
 		refreshClientBlockRender = false;
 	}
 
@@ -215,7 +216,8 @@ public class MountedStorageHolder extends StorageHolderBase {
 
 	@Override
 	protected void openMenu(Player player) {
-		@Nullable Entity e = getEntity();
+		@Nullable
+		Entity e = getEntity();
 		if (e == null) {
 			return;
 		}
@@ -256,7 +258,8 @@ public class MountedStorageHolder extends StorageHolderBase {
 		}
 	}
 
-	public void initEntityLevelAndPositions(AbstractContraptionEntity abstractContraptionEntity, BlockPos localPos, Level level, Vec3 position, BlockState state) {
+	public void initEntityLevelAndPositions(AbstractContraptionEntity abstractContraptionEntity, BlockPos localPos, Level level, Vec3 position,
+			BlockState state) {
 		setContraptionEntity(abstractContraptionEntity);
 		setLocalPos(localPos);
 		setLevel(level);
@@ -270,8 +273,8 @@ public class MountedStorageHolder extends StorageHolderBase {
 
 	public void clearNbt() {
 		if (!clearedNbt && getEntity() instanceof AbstractContraptionEntity abstractContraptionEntity) {
-			abstractContraptionEntity.getContraption().getBlocks()
-					.computeIfPresent(localPos, (p, blockInfo) -> new StructureTemplate.StructureBlockInfo(blockInfo.pos(), blockInfo.state(), null));
+			abstractContraptionEntity.getContraption().getBlocks().computeIfPresent(localPos,
+					(p, blockInfo) -> new StructureTemplate.StructureBlockInfo(blockInfo.pos(), blockInfo.state(), null));
 			clearedNbt = true;
 		}
 	}
@@ -304,8 +307,8 @@ public class MountedStorageHolder extends StorageHolderBase {
 
 	private Optional<MountedStorageHolder> getHolderOfOtherHalf(BlockPos otherHalfLocalPos) {
 		Entity e = getEntity();
-		if (e instanceof AbstractContraptionEntity abstractContraptionEntity
-				&& ContraptionHelper.getMountedStorage(abstractContraptionEntity, otherHalfLocalPos) instanceof MountedSophisticatedStorage mountedSophisticatedStorage) {
+		if (e instanceof AbstractContraptionEntity abstractContraptionEntity && ContraptionHelper.getMountedStorage(abstractContraptionEntity,
+				otherHalfLocalPos) instanceof MountedSophisticatedStorage mountedSophisticatedStorage) {
 			return Optional.of(mountedSophisticatedStorage.getStorageHolder());
 		}
 		return Optional.empty();
@@ -338,7 +341,8 @@ public class MountedStorageHolder extends StorageHolderBase {
 	}
 
 	public void updateState() {
-		if (getEntity() instanceof AbstractContraptionEntity contraptionEntity && getSyncedStorageStack().getItem() instanceof StorageBlockItem storageBlockItem) {
+		if (getEntity() instanceof AbstractContraptionEntity contraptionEntity
+				&& getSyncedStorageStack().getItem() instanceof StorageBlockItem storageBlockItem) {
 			StructureTemplate.StructureBlockInfo blockInfo = contraptionEntity.getContraption().getBlocks().get(localPos);
 			BlockState newBlockState = storageBlockItem.getBlock().defaultBlockState();
 			for (var value : blockInfo.state().getValues().toList()) {
