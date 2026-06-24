@@ -18,14 +18,9 @@ import javax.annotation.Nullable;
 
 public record MountedStorageOpennessPayload(int contraptionEntityId, BlockPos localPos, boolean shouldBeOpen) implements CustomPacketPayload {
 	public static final Type<MountedStorageOpennessPayload> TYPE = new Type<>(SophisticatedStorageCreateIntegration.getRL("storage_openness"));
-	public static final StreamCodec<RegistryFriendlyByteBuf, MountedStorageOpennessPayload> STREAM_CODEC = StreamCodec.composite(
-			ByteBufCodecs.INT,
-			MountedStorageOpennessPayload::contraptionEntityId,
-			BlockPos.STREAM_CODEC,
-			MountedStorageOpennessPayload::localPos,
-			ByteBufCodecs.BOOL,
-			MountedStorageOpennessPayload::shouldBeOpen,
-			MountedStorageOpennessPayload::new);
+	public static final StreamCodec<RegistryFriendlyByteBuf, MountedStorageOpennessPayload> STREAM_CODEC = StreamCodec.composite(ByteBufCodecs.INT,
+			MountedStorageOpennessPayload::contraptionEntityId, BlockPos.STREAM_CODEC, MountedStorageOpennessPayload::localPos, ByteBufCodecs.BOOL,
+			MountedStorageOpennessPayload::shouldBeOpen, MountedStorageOpennessPayload::new);
 
 	@Override
 	public Type<? extends CustomPacketPayload> type() {
@@ -36,7 +31,8 @@ public record MountedStorageOpennessPayload(int contraptionEntityId, BlockPos lo
 		Player player = context.player();
 		Entity entity = player.level().getEntity(payload.contraptionEntityId());
 		if (entity instanceof AbstractContraptionEntity contraptionEntity) {
-			@Nullable MountedStorageBase mountedStorage = ContraptionHelper.getMountedStorage(contraptionEntity, payload.localPos());
+			@Nullable
+			MountedStorageBase mountedStorage = ContraptionHelper.getMountedStorage(contraptionEntity, payload.localPos());
 			if (!(mountedStorage instanceof MountedSophisticatedStorage mountedSophisticatedStorage)) {
 				return;
 			}
