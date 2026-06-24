@@ -15,7 +15,8 @@ public class SophisticatedStorageMovementBehaviour implements MovementBehaviour 
 
 	@Override
 	public void tick(MovementContext context) {
-		@Nullable MountedSophisticatedStorage storage = getMountedSophisticatedStorage(context);
+		@Nullable
+		MountedSophisticatedStorage storage = getMountedSophisticatedStorage(context);
 		if (storage != null) {
 			storage.initEntityLevelAndPositions(context);
 			storage.clearNbt();
@@ -23,10 +24,11 @@ public class SophisticatedStorageMovementBehaviour implements MovementBehaviour 
 		}
 	}
 
-	//TODO replace with direct call to context.getItemStorage once this is fixed for when storage is synced and new instance is created on client
+	// TODO replace with direct call to context.getItemStorage once this is fixed for when storage is synced and new instance is created on client
 	@Nullable
 	private MountedSophisticatedStorage getMountedSophisticatedStorage(MovementContext context) {
-		if (ContraptionHelper.getMountedStorage(context.contraption.entity, context.localPos) instanceof MountedSophisticatedStorage mountedSophisticatedStorage) {
+		if (ContraptionHelper.getMountedStorage(context.contraption.entity,
+				context.localPos) instanceof MountedSophisticatedStorage mountedSophisticatedStorage) {
 			return mountedSophisticatedStorage;
 		}
 
@@ -35,7 +37,8 @@ public class SophisticatedStorageMovementBehaviour implements MovementBehaviour 
 
 	@Override
 	public void visitNewPosition(MovementContext context, BlockPos pos) {
-		@Nullable MountedSophisticatedStorage storage = getMountedSophisticatedStorage(context);
+		@Nullable
+		MountedSophisticatedStorage storage = getMountedSophisticatedStorage(context);
 		if (storage != null) {
 			MountedStorageHolder storageHolder = storage.getStorageHolder();
 			storageHolder.setPosition(new Vec3(pos.getX(), pos.getY(), pos.getZ()));
