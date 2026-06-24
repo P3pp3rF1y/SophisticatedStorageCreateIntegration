@@ -27,7 +27,8 @@ public class MountedStorageSettingsContainerMenu extends MountedStorageSettingsC
 	protected MountedStorageSettingsContainerMenu(MenuType<?> menuType, int windowId, Player player, int contraptionEntityId, BlockPos localPos) {
 		super(menuType, windowId, player, getWrapper(player.level(), contraptionEntityId, localPos), contraptionEntityId, localPos);
 		if (getPlayer().level().getEntity(getContraptionEntityId()) instanceof AbstractContraptionEntity cEntity) {
-			doubleChest = ContraptionHelper.getMountedStorage(cEntity, getLocalPos()) instanceof MountedSophisticatedStorage mountedSophisticatedStorage && mountedSophisticatedStorage.getStorageHolder().isDoubleChest();
+			doubleChest = ContraptionHelper.getMountedStorage(cEntity, getLocalPos()) instanceof MountedSophisticatedStorage mountedSophisticatedStorage
+					&& mountedSophisticatedStorage.getStorageHolder().isDoubleChest();
 		} else {
 			doubleChest = false;
 		}
