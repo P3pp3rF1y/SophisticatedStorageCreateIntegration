@@ -11,6 +11,10 @@ import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.level.Level;
 import net.p3pp3rf1y.sophisticatedcore.api.IStorageWrapper;
 import net.p3pp3rf1y.sophisticatedcore.compat.create.*;
+import net.p3pp3rf1y.sophisticatedcore.compat.create.ContraptionHelper;
+import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageContentsMessage;
+import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageData;
+import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageSettingsContainerMenuBase;
 import net.p3pp3rf1y.sophisticatedcore.network.PacketHandler;
 import net.p3pp3rf1y.sophisticatedcore.util.NoopStorageWrapper;
 import net.p3pp3rf1y.sophisticatedstorage.entity.MovingStorageWrapper;
@@ -19,6 +23,7 @@ import net.p3pp3rf1y.sophisticatedstoragecreateintegration.storage.MountedSophis
 
 import java.util.UUID;
 
+@SuppressWarnings("PMD.UnnecessaryImport")
 public class MountedStorageSettingsContainerMenu extends MountedStorageSettingsContainerMenuBase {
 	private final boolean doubleChest;
 
@@ -29,7 +34,8 @@ public class MountedStorageSettingsContainerMenu extends MountedStorageSettingsC
 	protected MountedStorageSettingsContainerMenu(MenuType<?> menuType, int windowId, Player player, int contraptionEntityId, BlockPos localPos) {
 		super(menuType, windowId, player, getWrapper(player.level(), contraptionEntityId, localPos), contraptionEntityId, localPos);
 		if (getPlayer().level().getEntity(getContraptionEntityId()) instanceof AbstractContraptionEntity cEntity) {
-			doubleChest = ContraptionHelper.getMountedStorage(cEntity, getLocalPos()) instanceof MountedSophisticatedStorage mountedSophisticatedStorage && mountedSophisticatedStorage.getStorageHolder().isDoubleChest();
+			doubleChest = ContraptionHelper.getMountedStorage(cEntity, getLocalPos()) instanceof MountedSophisticatedStorage mountedSophisticatedStorage
+					&& mountedSophisticatedStorage.getStorageHolder().isDoubleChest();
 		} else {
 			doubleChest = false;
 		}

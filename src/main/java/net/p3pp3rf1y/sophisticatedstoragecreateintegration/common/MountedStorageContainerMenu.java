@@ -69,7 +69,8 @@ public class MountedStorageContainerMenu extends MountedStorageContainerMenuBase
 	}
 
 	@Override
-	protected MountedStorageSettingsContainerMenuBase instantiateSettingsContainerMenu(int windowId, Player player, int contraptionEntityId, BlockPos localPos) {
+	protected MountedStorageSettingsContainerMenuBase instantiateSettingsContainerMenu(int windowId, Player player, int contraptionEntityId,
+			BlockPos localPos) {
 		return new MountedStorageSettingsContainerMenu(windowId, player, contraptionEntityId, localPos);
 	}
 
@@ -85,7 +86,8 @@ public class MountedStorageContainerMenu extends MountedStorageContainerMenuBase
 	}
 
 	public float getSlotFillPercentage(int slot) {
-		List<Float> slotFillRatios = getMountedStorage().map(m -> m.getStorageWrapper().getRenderInfo().getItemDisplayRenderInfo().getSlotFillRatios()).orElse(Collections.emptyList());
+		List<Float> slotFillRatios = getMountedStorage().map(m -> m.getStorageWrapper().getRenderInfo().getItemDisplayRenderInfo().getSlotFillRatios())
+				.orElse(Collections.emptyList());
 		return slot > -1 && slot < slotFillRatios.size() ? slotFillRatios.get(slot) : 0;
 	}
 

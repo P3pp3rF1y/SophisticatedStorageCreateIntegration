@@ -36,23 +36,30 @@ import net.p3pp3rf1y.sophisticatedcore.upgrades.UpgradeItemBase;
 import net.p3pp3rf1y.sophisticatedcore.util.NBTHelper;
 import net.p3pp3rf1y.sophisticatedcore.util.WorldHelper;
 import net.p3pp3rf1y.sophisticatedstorage.block.*;
+import net.p3pp3rf1y.sophisticatedstorage.block.BarrelBlockEntity;
+import net.p3pp3rf1y.sophisticatedstorage.block.StorageBlockEntity;
+import net.p3pp3rf1y.sophisticatedstorage.block.WoodStorageBlockEntity;
 import net.p3pp3rf1y.sophisticatedstorage.entity.MovingStorageWrapper;
 import net.p3pp3rf1y.sophisticatedstorage.entity.StorageHolderTierUpgradeHandler;
 import net.p3pp3rf1y.sophisticatedstorage.entity.StorageHolderToolHandler;
 import net.p3pp3rf1y.sophisticatedstorage.init.ModItems;
 import net.p3pp3rf1y.sophisticatedstorage.item.*;
+import net.p3pp3rf1y.sophisticatedstorage.item.BarrelBlockItem;
+import net.p3pp3rf1y.sophisticatedstorage.item.StorageBlockItem;
+import net.p3pp3rf1y.sophisticatedstorage.item.WoodStorageBlockItem;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.common.MountedLimitedBarrelContainerMenu;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.common.MountedStorageContainerMenu;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.init.ModContent;
 
 import javax.annotation.Nullable;
+
 import java.util.UUID;
 import java.util.function.Supplier;
 
+@SuppressWarnings("PMD.UnnecessaryImport")
 public class MountedSophisticatedStorage extends MountedStorageBase {
-	public static final Codec<MountedSophisticatedStorage> CODEC = ItemStack.CODEC.xmap(
-			MountedSophisticatedStorage::new, MountedSophisticatedStorage::getStorageStack
-	);
+	public static final Codec<MountedSophisticatedStorage> CODEC = ItemStack.CODEC.xmap(MountedSophisticatedStorage::new,
+			MountedSophisticatedStorage::getStorageStack);
 	protected static final Multimap<Class<? extends Item>, String> NBT_TO_TRANSFER = LinkedListMultimap.create();
 
 	public static void registerNbtToTransfer(Class<? extends Item> itemClass, String tagName) {
@@ -104,7 +111,8 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 			}
 		}
 
-		storage.getStorageWrapper().getSettingsHandler().getTypeCategory(ItemDisplaySettingsCategory.class).itemsChanged(); //update slot counts and fill levels
+		storage.getStorageWrapper().getSettingsHandler().getTypeCategory(ItemDisplaySettingsCategory.class).itemsChanged(); // update slot counts and fill
+																															// levels
 
 		CompoundTag fullBeNbt = storage.saveWithoutMetadata();
 
@@ -130,7 +138,7 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 			if (entry.getKey().isInstance(storageItem.getItem())) {
 				String tagName = entry.getValue();
 				if (fullBeNbt.contains(tagName)) {
-					//noinspection DataFlowIssue - contains check above
+					// noinspection DataFlowIssue - contains check above
 					storageItem.getOrCreateTag().put(tagName, fullBeNbt.get(tagName));
 				}
 			}
@@ -152,7 +160,7 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 
 	private static void transferNbtIfPresent(@Nullable CompoundTag sourceNbt, String tagName, Supplier<CompoundTag> getTargetTag) {
 		if (sourceNbt != null && sourceNbt.contains(tagName)) {
-			//noinspection DataFlowIssue - contains check makes sure tag actually exists
+			// noinspection DataFlowIssue - contains check makes sure tag actually exists
 			getTargetTag.get().put(tagName, sourceNbt.get(tagName));
 		}
 	}
@@ -171,57 +179,59 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 	@Override
 	public void unmount(Level level, BlockState state, BlockPos pos, @Nullable BlockEntity be) {
 		NBTHelper.getUniqueId(getStorageStack(), StorageWrapper.UUID_TAG).ifPresent(storageUuid -> {
-					if (be instanceof StorageBlockEntity storageBe) {
-						MountedStorageData mountedStorageData = MountedStorageData.get(storageUuid);
-						CompoundTag fullBeNbt = new CompoundTag();
+			if (be instanceof StorageBlockEntity storageBe) {
+				MountedStorageData mountedStorageData = MountedStorageData.get(storageUuid);
+				CompoundTag fullBeNbt = new CompoundTag();
 
-						CompoundTag contentNbt = mountedStorageData.getContents();
-						transferNbtIfPresent(getStorageStack().getTag(), StorageWrapper.RENDER_INFO_TAG, () -> contentNbt);
-						transferNbtIfPresent(getStorageStack().getTag(), StorageWrapper.SORT_BY_TAG, () -> contentNbt);
-						transferNbtIfPresent(getStorageStack().getTag(), StorageWrapper.NUMBER_OF_INVENTORY_SLOTS_TAG, () -> contentNbt);
-						transferNbtIfPresent(getStorageStack().getTag(), StorageWrapper.NUMBER_OF_UPGRADE_SLOTS_TAG, () -> contentNbt);
+				CompoundTag contentNbt = mountedStorageData.getContents();
+				transferNbtIfPresent(getStorageStack().getTag(), StorageWrapper.RENDER_INFO_TAG, () -> contentNbt);
+				transferNbtIfPresent(getStorageStack().getTag(), StorageWrapper.SORT_BY_TAG, () -> contentNbt);
+				transferNbtIfPresent(getStorageStack().getTag(), StorageWrapper.NUMBER_OF_INVENTORY_SLOTS_TAG, () -> contentNbt);
+				transferNbtIfPresent(getStorageStack().getTag(), StorageWrapper.NUMBER_OF_UPGRADE_SLOTS_TAG, () -> contentNbt);
 
-						fullBeNbt.put(StorageBlockEntity.STORAGE_WRAPPER_TAG, contentNbt);
+				fullBeNbt.put(StorageBlockEntity.STORAGE_WRAPPER_TAG, contentNbt);
 
-						for (var entry : NBT_TO_TRANSFER.entries()) {
-							if (entry.getKey().isInstance(getStorageStack().getItem())) {
-								transferNbtIfPresent(getStorageStack().getTag(), entry.getValue(), () -> fullBeNbt);
-							}
-						}
-
-						if (state.getBlock() instanceof ChestBlock && state.getValue(ChestBlock.TYPE) != ChestType.SINGLE) { //prevent double chest update shape changes dropping items before both parts loaded
-							storageBe.setBeingUpgraded(true);
-						}
-						storageBe.load(fullBeNbt);
-						if (getStorageStack().getItem() instanceof ITintableBlockItem tintableBlockItem) {
-							storageBe.getStorageWrapper().setColors(tintableBlockItem.getMainColor(getStorageStack()).orElse(-1), tintableBlockItem.getAccentColor(getStorageStack()).orElse(-1));
-						}
-						mountedStorageData.removeStorageContents();
-
-						if (storageBe instanceof ChestBlockEntity chestBe && state.getValue(ChestBlock.TYPE) != ChestType.SINGLE) {
-							BlockState inWorldState = level.getBlockState(pos);
-							ChestType chestType = state.getValue(ChestBlock.TYPE);
-							level.setBlock(pos, inWorldState.setValue(ChestBlock.TYPE, chestType), 3);
-
-							Direction facing = inWorldState.getValue(ChestBlock.FACING);
-							BlockPos connectedPos = pos.relative(chestType == ChestType.LEFT ? facing.getClockWise() : facing.getCounterClockWise());
-
-							WorldHelper.getBlockEntity(level, connectedPos, ChestBlockEntity.class).ifPresent(otherHalfBe -> {
-								ChestBlockEntity mainBe = chestType == ChestType.LEFT ? otherHalfBe : chestBe;
-								ChestBlockEntity attachedBe = chestType == ChestType.LEFT ? chestBe : otherHalfBe;
-								mainBe.setBeingUpgraded(false);
-								attachedBe.setBeingUpgraded(false);
-								mainBe.getStorageWrapper().onInit(level);
-								mainBe.tryToAddToController();
-							});
-						} else {
-							storageBe.getStorageWrapper().onInit(level);
-							storageBe.tryToAddToController();
-						}
-
+				for (var entry : NBT_TO_TRANSFER.entries()) {
+					if (entry.getKey().isInstance(getStorageStack().getItem())) {
+						transferNbtIfPresent(getStorageStack().getTag(), entry.getValue(), () -> fullBeNbt);
 					}
 				}
-		);
+
+				if (state.getBlock() instanceof ChestBlock && state.getValue(ChestBlock.TYPE) != ChestType.SINGLE) { // prevent double chest update shape
+																														// changes dropping items before both
+																														// parts loaded
+					storageBe.setBeingUpgraded(true);
+				}
+				storageBe.load(fullBeNbt);
+				if (getStorageStack().getItem() instanceof ITintableBlockItem tintableBlockItem) {
+					storageBe.getStorageWrapper().setColors(tintableBlockItem.getMainColor(getStorageStack()).orElse(-1),
+							tintableBlockItem.getAccentColor(getStorageStack()).orElse(-1));
+				}
+				mountedStorageData.removeStorageContents();
+
+				if (storageBe instanceof ChestBlockEntity chestBe && state.getValue(ChestBlock.TYPE) != ChestType.SINGLE) {
+					BlockState inWorldState = level.getBlockState(pos);
+					ChestType chestType = state.getValue(ChestBlock.TYPE);
+					level.setBlock(pos, inWorldState.setValue(ChestBlock.TYPE, chestType), 3);
+
+					Direction facing = inWorldState.getValue(ChestBlock.FACING);
+					BlockPos connectedPos = pos.relative(chestType == ChestType.LEFT ? facing.getClockWise() : facing.getCounterClockWise());
+
+					WorldHelper.getBlockEntity(level, connectedPos, ChestBlockEntity.class).ifPresent(otherHalfBe -> {
+						ChestBlockEntity mainBe = chestType == ChestType.LEFT ? otherHalfBe : chestBe;
+						ChestBlockEntity attachedBe = chestType == ChestType.LEFT ? chestBe : otherHalfBe;
+						mainBe.setBeingUpgraded(false);
+						attachedBe.setBeingUpgraded(false);
+						mainBe.getStorageWrapper().onInit(level);
+						mainBe.tryToAddToController();
+					});
+				} else {
+					storageBe.getStorageWrapper().onInit(level);
+					storageBe.tryToAddToController();
+				}
+
+			}
+		});
 	}
 
 	public MountedStorageContainerMenuBase createMenu(int id, Player pl, int contraptionEntityId, BlockPos localPos) {
@@ -288,7 +298,8 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 		}
 		BlockState state = blockItem.getBlock().defaultBlockState();
 		SoundEvent placeSound = state.getSoundType().getPlaceSound();
-		boolean painted = PaintbrushItem.paint(player, paintbrush, getStorageHolder(), getStorageWrapper(), getStorageHolder().getPosition(), Direction.UP, placeSound);
+		boolean painted = PaintbrushItem.paint(player, paintbrush, getStorageHolder(), getStorageWrapper(), getStorageHolder().getPosition(), Direction.UP,
+				placeSound);
 		if (painted) {
 			storageHolder.updateClientBlockRender();
 			storageHolder.sendStorageUpdatePayload();
@@ -304,8 +315,7 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 				if (storageHolder.getMainStorageHolder() instanceof MountedStorageHolder mainStorageHolder) {
 					mainStorageHolder.updateState();
 				}
-				storageHolder.getAuxiliaryStorageHolder().filter(MountedStorageHolder.class::isInstance)
-						.map(MountedStorageHolder.class::cast)
+				storageHolder.getAuxiliaryStorageHolder().filter(MountedStorageHolder.class::isInstance).map(MountedStorageHolder.class::cast)
 						.ifPresent(MountedStorageHolder::updateState);
 			} else {
 				storageHolder.updateState();
@@ -343,10 +353,8 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 	}
 
 	public void openMenu(ServerPlayer player, int contraptionEntityId, BlockPos localPos) {
-		NetworkHooks.openScreen(
-				player,
-				new SimpleMenuProvider((w, p, pl) -> createMenu(w, pl, contraptionEntityId, localPos), getStorageStack().getHoverName()),
-				buffer -> {
+		NetworkHooks.openScreen(player,
+				new SimpleMenuProvider((w, p, pl) -> createMenu(w, pl, contraptionEntityId, localPos), getStorageStack().getHoverName()), buffer -> {
 					buffer.writeInt(contraptionEntityId);
 					buffer.writeBlockPos(localPos);
 				});

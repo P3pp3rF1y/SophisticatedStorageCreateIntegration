@@ -39,27 +39,26 @@ import java.util.function.Supplier;
 
 public class ModContent {
 	private static final CreateRegistrate REGISTRATE = CreateRegistrate.create(SophisticatedStorageCreateIntegration.MOD_ID)
-			.defaultCreativeTab((ResourceKey<CreativeModeTab>) null)
-			.setTooltipModifierFactory(item ->
-					new ItemDescription.Modifier(item, FontHelper.Palette.STANDARD_CREATE)
-							.andThen(TooltipModifier.mapNull(KineticStats.create(item)))
-			);
+			.defaultCreativeTab((ResourceKey<CreativeModeTab>) null).setTooltipModifierFactory(
+					item -> new ItemDescription.Modifier(item, FontHelper.Palette.STANDARD_CREATE).andThen(TooltipModifier.mapNull(KineticStats.create(item))));
 
-	private static final DeferredRegister<MenuType<?>> MENU_TYPES = DeferredRegister.create(ForgeRegistries.MENU_TYPES, SophisticatedStorageCreateIntegration.MOD_ID);
+	private static final DeferredRegister<MenuType<?>> MENU_TYPES = DeferredRegister.create(ForgeRegistries.MENU_TYPES,
+			SophisticatedStorageCreateIntegration.MOD_ID);
 
-	public static final RegistryEntry<MountedSophisticatedStorageType> SOPHISTICATED_MOUNTED_STORAGE_TYPE = REGISTRATE.mountedItemStorage("sophisticated_storage", MountedSophisticatedStorageType::new).register();
+	public static final RegistryEntry<MountedSophisticatedStorageType> SOPHISTICATED_MOUNTED_STORAGE_TYPE = REGISTRATE
+			.mountedItemStorage("sophisticated_storage", MountedSophisticatedStorageType::new).register();
 
 	public static final Supplier<MenuType<MountedStorageContainerMenu>> MOUNTED_STORAGE_CONTAINER_TYPE = MENU_TYPES.register("mounted_storage",
 			() -> IForgeMenuType.create(MountedStorageContainerMenu::fromBuffer));
 
-	public static final Supplier<MenuType<MountedStorageSettingsContainerMenu>> MOUNTED_STORAGE_SETTINGS_CONTAINER_TYPE = MENU_TYPES.register("mounted_storage_settings",
-			() -> IForgeMenuType.create(MountedStorageSettingsContainerMenu::fromBuffer));
+	public static final Supplier<MenuType<MountedStorageSettingsContainerMenu>> MOUNTED_STORAGE_SETTINGS_CONTAINER_TYPE = MENU_TYPES
+			.register("mounted_storage_settings", () -> IForgeMenuType.create(MountedStorageSettingsContainerMenu::fromBuffer));
 
-	public static final Supplier<MenuType<MountedLimitedBarrelContainerMenu>> MOUNTED_LIMITED_BARREL_CONTAINER_TYPE = MENU_TYPES.register("mounted_limited_barrel",
-			() -> IForgeMenuType.create(MountedLimitedBarrelContainerMenu::fromBuffer));
+	public static final Supplier<MenuType<MountedLimitedBarrelContainerMenu>> MOUNTED_LIMITED_BARREL_CONTAINER_TYPE = MENU_TYPES
+			.register("mounted_limited_barrel", () -> IForgeMenuType.create(MountedLimitedBarrelContainerMenu::fromBuffer));
 
-	public static final Supplier<MenuType<MountedLimitedBarrelSettingsContainerMenu>> MOUNTED_LIMITED_BARREL_SETTINGS_CONTAINER_TYPE = MENU_TYPES.register("mounted_limited_barrel_settings",
-			() -> IForgeMenuType.create(MountedLimitedBarrelSettingsContainerMenu::fromBuffer));
+	public static final Supplier<MenuType<MountedLimitedBarrelSettingsContainerMenu>> MOUNTED_LIMITED_BARREL_SETTINGS_CONTAINER_TYPE = MENU_TYPES
+			.register("mounted_limited_barrel_settings", () -> IForgeMenuType.create(MountedLimitedBarrelSettingsContainerMenu::fromBuffer));
 
 	public static void registerHandler(IEventBus modBus) {
 		REGISTRATE.registerEventListeners(modBus);
@@ -73,11 +72,10 @@ public class ModContent {
 	}
 
 	private static void onModSetup(FMLCommonSetupEvent event) {
-		BuiltInRegistries.BLOCK.stream().filter(block -> block instanceof StorageBlockBase)
-				.forEach(block -> {
-					MountedItemStorageType.REGISTRY.register(block, SOPHISTICATED_MOUNTED_STORAGE_TYPE.get());
-					MovementBehaviour.REGISTRY.register(block, SophisticatedStorageMovementBehaviour.INSTANCE);
-				});
+		BuiltInRegistries.BLOCK.stream().filter(block -> block instanceof StorageBlockBase).forEach(block -> {
+			MountedItemStorageType.REGISTRY.register(block, SOPHISTICATED_MOUNTED_STORAGE_TYPE.get());
+			MovementBehaviour.REGISTRY.register(block, SophisticatedStorageMovementBehaviour.INSTANCE);
+		});
 		MovedBlockTransformerRegistries.BLOCK_TRANSFORMERS.register(ModBlocks.CHEST.get(), SophisticatedChestBlockTransformer::transform);
 		MovedBlockTransformerRegistries.BLOCK_TRANSFORMERS.register(ModBlocks.COPPER_CHEST.get(), SophisticatedChestBlockTransformer::transform);
 		MovedBlockTransformerRegistries.BLOCK_TRANSFORMERS.register(ModBlocks.IRON_CHEST.get(), SophisticatedChestBlockTransformer::transform);
@@ -89,7 +87,8 @@ public class ModContent {
 		SafeNbtWriterRegistry.REGISTRY.register(ModBlocks.LIMITED_BARREL_BLOCK_ENTITY_TYPE.get(), SophisticatedStorageSafeNbtWriter.Wooden.INSTANCE);
 		SafeNbtWriterRegistry.REGISTRY.register(ModBlocks.SHULKER_BOX_BLOCK_ENTITY_TYPE.get(), SophisticatedStorageSafeNbtWriter.INSTANCE);
 		event.enqueueWork(() -> {
-			StoragePacketHandler.INSTANCE.registerMessage(OpenMountedStorageInventoryMessage.class, OpenMountedStorageInventoryMessage::encode, OpenMountedStorageInventoryMessage::decode, OpenMountedStorageInventoryMessage::onMessage);
+			StoragePacketHandler.INSTANCE.registerMessage(OpenMountedStorageInventoryMessage.class, OpenMountedStorageInventoryMessage::encode,
+					OpenMountedStorageInventoryMessage::decode, OpenMountedStorageInventoryMessage::onMessage);
 		});
 	}
 }

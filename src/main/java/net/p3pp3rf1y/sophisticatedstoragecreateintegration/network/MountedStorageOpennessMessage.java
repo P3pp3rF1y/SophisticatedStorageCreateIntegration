@@ -12,6 +12,7 @@ import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageBase;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.storage.MountedSophisticatedStorage;
 
 import javax.annotation.Nullable;
+
 import java.util.function.Supplier;
 
 public record MountedStorageOpennessMessage(int contraptionEntityId, BlockPos localPos, boolean shouldBeOpen) {
@@ -22,11 +23,7 @@ public record MountedStorageOpennessMessage(int contraptionEntityId, BlockPos lo
 	}
 
 	public static MountedStorageOpennessMessage decode(FriendlyByteBuf packetBuffer) {
-		return new MountedStorageOpennessMessage(
-				packetBuffer.readInt(),
-				packetBuffer.readBlockPos(),
-				packetBuffer.readBoolean()
-		);
+		return new MountedStorageOpennessMessage(packetBuffer.readInt(), packetBuffer.readBlockPos(), packetBuffer.readBoolean());
 	}
 
 	static void onMessage(MountedStorageOpennessMessage msg, Supplier<NetworkEvent.Context> contextSupplier) {
@@ -43,7 +40,8 @@ public record MountedStorageOpennessMessage(int contraptionEntityId, BlockPos lo
 
 		Entity entity = player.level().getEntity(msg.contraptionEntityId());
 		if (entity instanceof AbstractContraptionEntity contraptionEntity) {
-			@Nullable MountedStorageBase mountedStorage = ContraptionHelper.getMountedStorage(contraptionEntity, msg.localPos());
+			@Nullable
+			MountedStorageBase mountedStorage = ContraptionHelper.getMountedStorage(contraptionEntity, msg.localPos());
 			if (!(mountedStorage instanceof MountedSophisticatedStorage mountedSophisticatedStorage)) {
 				return;
 			}

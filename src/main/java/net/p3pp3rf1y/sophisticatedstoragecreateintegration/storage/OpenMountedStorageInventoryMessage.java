@@ -10,6 +10,7 @@ import net.p3pp3rf1y.sophisticatedcore.compat.create.ContraptionHelper;
 import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageBase;
 
 import javax.annotation.Nullable;
+
 import java.util.function.Supplier;
 
 public record OpenMountedStorageInventoryMessage(int contraptionEntityId, BlockPos localPos) {
