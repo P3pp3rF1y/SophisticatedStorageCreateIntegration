@@ -5,10 +5,12 @@ import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.SophisticatedStorageCreateIntegration;
 
 public class ModPayloads {
-	private ModPayloads() {}
+	private ModPayloads() {
+	}
 
 	public static void registerPayloads(final RegisterPayloadHandlersEvent event) {
-		final PayloadRegistrar registrar = event.registrar(SophisticatedStorageCreateIntegration.MOD_ID).versioned(SophisticatedStorageCreateIntegration.getNetworkProtocolVersion());
+		final PayloadRegistrar registrar = event.registrar(SophisticatedStorageCreateIntegration.MOD_ID)
+				.versioned(SophisticatedStorageCreateIntegration.getNetworkProtocolVersion());
 		registrar.playToClient(MountedStorageOpennessPayload.TYPE, MountedStorageOpennessPayload.STREAM_CODEC, MountedStorageOpennessPayload::handlePayload);
 	}
 }

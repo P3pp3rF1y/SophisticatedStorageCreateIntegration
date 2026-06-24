@@ -61,16 +61,17 @@ public class StorageCreateJeiPlugin implements IModPlugin {
 	public void registerRecipeTransferHandlers(IRecipeTransferRegistration registration) {
 		IRecipeTransferHandlerHelper handlerHelper = registration.getTransferHelper();
 		IStackHelper stackHelper = registration.getJeiHelpers().getStackHelper();
-		registration.addRecipeTransferHandler(new JeiCraftingContainerRecipeTransferHandlerBase<MountedStorageContainerMenu, RecipeHolder<CraftingRecipe>>(handlerHelper, stackHelper) {
-			@Override
-			public Class<MountedStorageContainerMenu> getContainerClass() {
-				return MountedStorageContainerMenu.class;
-			}
+		registration.addRecipeTransferHandler(
+				new JeiCraftingContainerRecipeTransferHandlerBase<MountedStorageContainerMenu, RecipeHolder<CraftingRecipe>>(handlerHelper, stackHelper) {
+					@Override
+					public Class<MountedStorageContainerMenu> getContainerClass() {
+						return MountedStorageContainerMenu.class;
+					}
 
-			@Override
-			public IRecipeType<RecipeHolder<CraftingRecipe>> getRecipeType() {
-				return RecipeTypes.CRAFTING;
-			}
-		}, RecipeTypes.CRAFTING);
+					@Override
+					public IRecipeType<RecipeHolder<CraftingRecipe>> getRecipeType() {
+						return RecipeTypes.CRAFTING;
+					}
+				}, RecipeTypes.CRAFTING);
 	}
 }
