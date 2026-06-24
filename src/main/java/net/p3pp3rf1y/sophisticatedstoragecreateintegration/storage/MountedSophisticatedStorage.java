@@ -56,6 +56,7 @@ import net.p3pp3rf1y.sophisticatedstoragecreateintegration.common.MountedStorage
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.init.ModContent;
 
 import javax.annotation.Nullable;
+
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -63,9 +64,8 @@ import java.util.UUID;
 import java.util.function.Supplier;
 
 public class MountedSophisticatedStorage extends MountedStorageBase {
-	public static final MapCodec<MountedSophisticatedStorage> CODEC = ItemStack.OPTIONAL_CODEC.xmap(
-			MountedSophisticatedStorage::new, MountedSophisticatedStorage::getStorageStack
-	).fieldOf("value");
+	public static final MapCodec<MountedSophisticatedStorage> CODEC = ItemStack.OPTIONAL_CODEC
+			.xmap(MountedSophisticatedStorage::new, MountedSophisticatedStorage::getStorageStack).fieldOf("value");
 	protected static final Multimap<Class<? extends Item>, NbtToComponentMapper<?>> NBT_TO_COMPONENT_MAPPERS = LinkedListMultimap.create();
 
 	public static void registerNbtToComponentMapper(Class<? extends Item> itemClass, NbtToComponentMapper<?> mapper) {
@@ -73,26 +73,37 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 	}
 
 	static {
-		registerNbtToComponentMapper(StorageBlockItem.class, new NbtToComponentMapper<>("displayName", () -> DataComponents.CUSTOM_NAME,
-				(tag, key, level) -> Optional.ofNullable(Component.Serializer.fromJson(tag.getStringOr(key, ""), level.registryAccess())),
-				(tag, key, value, level) -> tag.putString(key, Component.Serializer.toJson(value, level.registryAccess())))
-		);
-		registerNbtToComponentMapper(StorageBlockItem.class, new NbtToComponentMapper<>("locked", ModDataComponents.LOCKED, CompoundTag::getBoolean, CompoundTag::putBoolean));
-		registerNbtToComponentMapper(StorageBlockItem.class, new NbtToComponentMapper<>("showLock", ModDataComponents.LOCK_VISIBLE, CompoundTag::getBoolean, CompoundTag::putBoolean));
-		registerNbtToComponentMapper(StorageBlockItem.class, new NbtToComponentMapper<>("showTier", ModDataComponents.TIER_VISIBLE, CompoundTag::getBoolean, CompoundTag::putBoolean));
-		registerNbtToComponentMapper(StorageBlockItem.class, new NbtToComponentMapper<>("showUpgrades", ModDataComponents.UPGRADES_VISIBLE, CompoundTag::getBoolean, CompoundTag::putBoolean));
-		registerNbtToComponentMapper(BarrelBlockItem.class, new NbtToComponentMapper<>("showCounts", ModDataComponents.COUNTS_VISIBLE, CompoundTag::getBoolean, CompoundTag::putBoolean));
-		registerNbtToComponentMapper(BarrelBlockItem.class, new NbtToComponentMapper<>("showFillLevels", ModDataComponents.FILL_LEVELS_VISIBLE, CompoundTag::getBoolean, CompoundTag::putBoolean));
-		registerNbtToComponentMapper(BarrelBlockItem.class, new NbtToComponentMapper<>("slotColors", ModDataComponents.SLOT_COLORS,
-				(tag, key) -> NBTHelper.getMap(tag, "slotColors", Integer::valueOf, (tagName, t) -> t.asInt().map(DyeColor::byId)),
-				(tag, key, value) -> NBTHelper.putMap(tag, key, value, String::valueOf, color -> IntTag.valueOf(color.getId()))));
-		registerNbtToComponentMapper(WoodStorageBlockItem.class, new NbtToComponentMapper<>("woodType", ModDataComponents.WOOD_TYPE,
-				(tag, key) -> WoodType.values().filter(wt -> wt.name().equals(tag.getStringOr(key, ""))).findFirst(),
-				(tag, key, value) -> tag.putString(key, value.name())));
-		registerNbtToComponentMapper(WoodStorageBlockItem.class, new NbtToComponentMapper<>(WoodStorageBlockEntity.PACKED_TAG, ModDataComponents.PACKED, CompoundTag::getBoolean, CompoundTag::putBoolean));
-		registerNbtToComponentMapper(BarrelBlockItem.class, new NbtToComponentMapper<>(BarrelBlockEntity.MATERIALS_TAG, ModDataComponents.BARREL_MATERIALS,
-				(tag, key, level) -> NBTHelper.getMap(tag, key, BarrelMaterial::fromName, (bm, t) -> t.asString().map(ResourceLocation::parse)),
-				(tag, key, value, level) -> NBTHelper.putMap(tag, key, value, BarrelMaterial::getSerializedName, resourceLocation -> StringTag.valueOf(resourceLocation.toString()))));
+		registerNbtToComponentMapper(StorageBlockItem.class,
+				new NbtToComponentMapper<>("displayName", () -> DataComponents.CUSTOM_NAME,
+						(tag, key, level) -> Optional.ofNullable(Component.Serializer.fromJson(tag.getStringOr(key, ""), level.registryAccess())),
+						(tag, key, value, level) -> tag.putString(key, Component.Serializer.toJson(value, level.registryAccess()))));
+		registerNbtToComponentMapper(StorageBlockItem.class,
+				new NbtToComponentMapper<>("locked", ModDataComponents.LOCKED, CompoundTag::getBoolean, CompoundTag::putBoolean));
+		registerNbtToComponentMapper(StorageBlockItem.class,
+				new NbtToComponentMapper<>("showLock", ModDataComponents.LOCK_VISIBLE, CompoundTag::getBoolean, CompoundTag::putBoolean));
+		registerNbtToComponentMapper(StorageBlockItem.class,
+				new NbtToComponentMapper<>("showTier", ModDataComponents.TIER_VISIBLE, CompoundTag::getBoolean, CompoundTag::putBoolean));
+		registerNbtToComponentMapper(StorageBlockItem.class,
+				new NbtToComponentMapper<>("showUpgrades", ModDataComponents.UPGRADES_VISIBLE, CompoundTag::getBoolean, CompoundTag::putBoolean));
+		registerNbtToComponentMapper(BarrelBlockItem.class,
+				new NbtToComponentMapper<>("showCounts", ModDataComponents.COUNTS_VISIBLE, CompoundTag::getBoolean, CompoundTag::putBoolean));
+		registerNbtToComponentMapper(BarrelBlockItem.class,
+				new NbtToComponentMapper<>("showFillLevels", ModDataComponents.FILL_LEVELS_VISIBLE, CompoundTag::getBoolean, CompoundTag::putBoolean));
+		registerNbtToComponentMapper(BarrelBlockItem.class,
+				new NbtToComponentMapper<>("slotColors", ModDataComponents.SLOT_COLORS,
+						(tag, key) -> NBTHelper.getMap(tag, "slotColors", Integer::valueOf, (tagName, t) -> t.asInt().map(DyeColor::byId)),
+						(tag, key, value) -> NBTHelper.putMap(tag, key, value, String::valueOf, color -> IntTag.valueOf(color.getId()))));
+		registerNbtToComponentMapper(WoodStorageBlockItem.class,
+				new NbtToComponentMapper<>("woodType", ModDataComponents.WOOD_TYPE,
+						(tag, key) -> WoodType.values().filter(wt -> wt.name().equals(tag.getStringOr(key, ""))).findFirst(),
+						(tag, key, value) -> tag.putString(key, value.name())));
+		registerNbtToComponentMapper(WoodStorageBlockItem.class,
+				new NbtToComponentMapper<>(WoodStorageBlockEntity.PACKED_TAG, ModDataComponents.PACKED, CompoundTag::getBoolean, CompoundTag::putBoolean));
+		registerNbtToComponentMapper(BarrelBlockItem.class,
+				new NbtToComponentMapper<>(BarrelBlockEntity.MATERIALS_TAG, ModDataComponents.BARREL_MATERIALS,
+						(tag, key, level) -> NBTHelper.getMap(tag, key, BarrelMaterial::fromName, (bm, t) -> t.asString().map(ResourceLocation::parse)),
+						(tag, key, value, level) -> NBTHelper.putMap(tag, key, value, BarrelMaterial::getSerializedName,
+								resourceLocation -> StringTag.valueOf(resourceLocation.toString()))));
 	}
 
 	private final MountedStorageHolder storageHolder;
@@ -126,7 +137,8 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 			}
 		}
 
-		storage.getStorageWrapper().getSettingsHandler().getTypeCategory(ItemDisplaySettingsCategory.class).itemsChanged(); //update slot counts and fill levels
+		storage.getStorageWrapper().getSettingsHandler().getTypeCategory(ItemDisplaySettingsCategory.class).itemsChanged(); // update slot counts and fill
+																															// levels
 
 		CompoundTag fullBeNbt = storage.saveWithoutMetadata(level.registryAccess());
 
@@ -134,8 +146,10 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 		CompoundTag storageWrapperNbt = fullBeNbt.getCompoundOrEmpty(StorageBlockEntity.STORAGE_WRAPPER_TAG);
 		contentsNbt.put(StorageWrapper.CONTENTS_TAG, storageWrapperNbt.getCompoundOrEmpty(StorageWrapper.CONTENTS_TAG));
 		contentsNbt.put(StorageWrapper.SETTINGS_TAG, storageWrapperNbt.getCompoundOrEmpty(StorageWrapper.SETTINGS_TAG));
-		storageItem.set(ModCoreDataComponents.RENDER_INFO_TAG, storageWrapperNbt.getCompound(StorageWrapper.RENDER_INFO_TAG).map(CustomData::of).orElse(CustomData.EMPTY));
-		storageItem.set(ModCoreDataComponents.SORT_BY, NBTHelper.getString(storageWrapperNbt, StorageWrapper.SORT_BY_TAG).map(SortBy::fromName).orElse(SortBy.NAME));
+		storageItem.set(ModCoreDataComponents.RENDER_INFO_TAG,
+				storageWrapperNbt.getCompound(StorageWrapper.RENDER_INFO_TAG).map(CustomData::of).orElse(CustomData.EMPTY));
+		storageItem.set(ModCoreDataComponents.SORT_BY,
+				NBTHelper.getString(storageWrapperNbt, StorageWrapper.SORT_BY_TAG).map(SortBy::fromName).orElse(SortBy.NAME));
 		storageItem.set(ModCoreDataComponents.NUMBER_OF_INVENTORY_SLOTS, storageWrapperNbt.getIntOr(StorageWrapper.NUMBER_OF_INVENTORY_SLOTS_TAG, 0));
 		storageItem.set(ModCoreDataComponents.NUMBER_OF_UPGRADE_SLOTS, storageWrapperNbt.getIntOr(StorageWrapper.NUMBER_OF_UPGRADE_SLOTS_TAG, 0));
 
@@ -219,12 +233,14 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 				}
 			}
 
-			if (state.getBlock() instanceof ChestBlock && state.getValue(ChestBlock.TYPE) != ChestType.SINGLE) { //prevent double chest update shape changes dropping items before both parts loaded
+			if (state.getBlock() instanceof ChestBlock && state.getValue(ChestBlock.TYPE) != ChestType.SINGLE) { // prevent double chest update shape changes
+																													// dropping items before both parts loaded
 				storageBe.setBeingUpgraded(true);
 			}
 			storageBe.loadAdditional(fullBeNbt, level.registryAccess());
 			if (getStorageStack().getItem() instanceof ITintableBlockItem tintableBlockItem) {
-				storageBe.getStorageWrapper().setColors(tintableBlockItem.getMainColor(getStorageStack()).orElse(-1), tintableBlockItem.getAccentColor(getStorageStack()).orElse(-1));
+				storageBe.getStorageWrapper().setColors(tintableBlockItem.getMainColor(getStorageStack()).orElse(-1),
+						tintableBlockItem.getAccentColor(getStorageStack()).orElse(-1));
 			}
 			mountedStorageData.removeStorageContents(storageId);
 
@@ -329,7 +345,8 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 		}
 		BlockState state = blockItem.getBlock().defaultBlockState();
 		SoundEvent placeSound = state.getSoundType().getPlaceSound();
-		boolean painted = PaintbrushItem.paint(player, paintbrush, getStorageHolder(), getStorageWrapper(), getStorageHolder().getPosition(), Direction.UP, placeSound);
+		boolean painted = PaintbrushItem.paint(player, paintbrush, getStorageHolder(), getStorageWrapper(), getStorageHolder().getPosition(), Direction.UP,
+				placeSound);
 		if (painted) {
 			storageHolder.updateClientBlockRenderAfterNextSync();
 			storageHolder.sendStorageUpdatePayload();
@@ -345,8 +362,7 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 				if (storageHolder.getMainStorageHolder() instanceof MountedStorageHolder mainStorageHolder) {
 					mainStorageHolder.updateState();
 				}
-				storageHolder.getAuxiliaryStorageHolder().filter(MountedStorageHolder.class::isInstance)
-						.map(MountedStorageHolder.class::cast)
+				storageHolder.getAuxiliaryStorageHolder().filter(MountedStorageHolder.class::isInstance).map(MountedStorageHolder.class::cast)
 						.ifPresent(MountedStorageHolder::updateState);
 			} else {
 				storageHolder.updateState();
@@ -386,7 +402,8 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 	}
 
 	public OptionalInt openMenu(ServerPlayer player, int contraptionEntityId, BlockPos localPos) {
-		return player.openMenu(new SophisticatedMenuProvider((w, p, pl) -> createMenu(w, pl, contraptionEntityId, localPos), getStorageStack().getHoverName(), false),
+		return player.openMenu(
+				new SophisticatedMenuProvider((w, p, pl) -> createMenu(w, pl, contraptionEntityId, localPos), getStorageStack().getHoverName(), false),
 				buffer -> {
 					buffer.writeInt(contraptionEntityId);
 					buffer.writeBlockPos(localPos);
@@ -397,9 +414,8 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 		storageHolder.setShouldBeOpen(b);
 	}
 
-	public record NbtToComponentMapper<T>(String tagName, Supplier<DataComponentType<T>> type,
-										  NbtLevelAwareGetter<T> nbtValueGetter,
-										  NbtLevelAwareSetter<T> nbtValueSetter) {
+	public record NbtToComponentMapper<T>(String tagName, Supplier<DataComponentType<T>> type, NbtLevelAwareGetter<T> nbtValueGetter,
+			NbtLevelAwareSetter<T> nbtValueSetter) {
 		public NbtToComponentMapper(String tagName, Supplier<DataComponentType<T>> type, NbtGetter<T> nbtValueGetter, NbtSetter<T> nbtValueSetter) {
 			this(tagName, type, (tag, key, level) -> nbtValueGetter.get(tag, key), (tag, key, value, level) -> nbtValueSetter.set(tag, key, value));
 		}

@@ -22,7 +22,7 @@ public class StorageCreateEmiPlugin implements EmiPlugin {
 
 	private void registerGuiHandlers(EmiRegistry registry) {
 		registry.addExclusionArea(MountedStorageScreen.class, (screen, consumer) -> {
-			//noinspection ConstantValue
+			// noinspection ConstantValue
 			if (screen == null || screen.getUpgradeSettingsControl() == null) {
 				return;
 			}
