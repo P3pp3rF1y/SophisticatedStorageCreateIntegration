@@ -26,7 +26,8 @@ public class StorageCreateReiClientPlugin implements REIClientPlugin {
 			return ret.stream().map(r -> new Rectangle(r.getX(), r.getY(), r.getWidth(), r.getHeight())).toList();
 		});
 
-		zones.register(MountedStorageSettingsScreen.class, screen -> screen.getExtendedControlsRectangles().stream().map(r -> new Rectangle(r.getX(), r.getY(), r.getWidth(), r.getHeight())).toList());
+		zones.register(MountedStorageSettingsScreen.class,
+				screen -> screen.getExtendedControlsRectangles().stream().map(r -> new Rectangle(r.getX(), r.getY(), r.getWidth(), r.getHeight())).toList());
 	}
 
 	@Override
