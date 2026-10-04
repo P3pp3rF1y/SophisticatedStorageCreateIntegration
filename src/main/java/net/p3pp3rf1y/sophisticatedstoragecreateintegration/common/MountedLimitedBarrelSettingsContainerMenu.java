@@ -12,6 +12,7 @@ public class MountedLimitedBarrelSettingsContainerMenu extends MountedStorageSet
 	}
 
 	public static MountedLimitedBarrelSettingsContainerMenu fromBuffer(int windowId, Inventory playerInventory, FriendlyByteBuf buffer) {
-		return new MountedLimitedBarrelSettingsContainerMenu(windowId, playerInventory.player, buffer.readInt(), buffer.readBlockPos());
+		MountedLinkedStorageMenuData.Position position = MountedLinkedStorageMenuData.read(buffer, playerInventory.player);
+		return new MountedLimitedBarrelSettingsContainerMenu(windowId, playerInventory.player, position.entityId(), position.localPos());
 	}
 }

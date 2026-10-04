@@ -5,6 +5,7 @@ import com.simibubi.create.content.contraptions.behaviour.MovementContext;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
@@ -20,20 +21,20 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.p3pp3rf1y.sophisticatedcore.api.IStorageSavedData;
 import net.p3pp3rf1y.sophisticatedcore.api.IStorageWrapper;
-import net.p3pp3rf1y.sophisticatedcore.common.gui.SophisticatedMenuProvider;
 import net.p3pp3rf1y.sophisticatedcore.compat.create.ContraptionHelper;
-import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageContainerMenuBase;
 import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageData;
 import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageUpdatePayload;
+import net.p3pp3rf1y.sophisticatedcore.init.ModCoreDataComponents;
+import net.p3pp3rf1y.sophisticatedcore.linkedstorage.ILinkedStorageBlockEndpoint;
+import net.p3pp3rf1y.sophisticatedcore.linkedstorage.ILinkedStorageEndpointAdapter;
+import net.p3pp3rf1y.sophisticatedcore.linkedstorage.LinkedStorageEndpointData;
 import net.p3pp3rf1y.sophisticatedcore.util.NoopStorageWrapper;
 import net.p3pp3rf1y.sophisticatedstorage.block.ChestBlock;
 import net.p3pp3rf1y.sophisticatedstorage.block.StorageBlockEntity;
-import net.p3pp3rf1y.sophisticatedstorage.entity.MovingStorageWrapper;
 import net.p3pp3rf1y.sophisticatedstorage.entity.StorageHolderBase;
 import net.p3pp3rf1y.sophisticatedstorage.init.ModDataComponents;
 import net.p3pp3rf1y.sophisticatedstorage.item.StorageBlockItem;
 import net.p3pp3rf1y.sophisticatedstorage.upgrades.hopper.HopperUpgradeItem;
-import net.p3pp3rf1y.sophisticatedstoragecreateintegration.common.MountedLimitedBarrelContainerMenu;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.common.MountedStorageContainerMenu;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.network.MountedStorageOpennessPayload;
 import org.jspecify.annotations.Nullable;
@@ -43,7 +44,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-public class MountedStorageHolder extends StorageHolderBase {
+public class MountedStorageHolder extends StorageHolderBase implements ILinkedStorageBlockEndpoint {
 	private final Consumer<ItemStack> storageStackSetter;
 	private final Supplier<ItemStack> storageStackGetter;
 	@Nullable
@@ -65,6 +66,26 @@ public class MountedStorageHolder extends StorageHolderBase {
 		this.storageStackGetter = storageStackGetter;
 		this.storageStackSetter = storageStackSetter;
 		updateRenderAttributes = true;
+	}
+
+	public ItemStack getInstalledStorageItem() {
+		return getSyncedStorageStack();
+	}
+
+	@Override
+	public boolean isLinkedStorageLinkCandidate() {
+		return getEntity() != null && getEntity().isAlive() && !isPacked() && getSyncedStorageStack().getItem() instanceof StorageBlockItem;
+	}
+
+	@Nullable
+	@Override
+	public LinkedStorageEndpointData getLinkedStorageEndpointData() {
+		return getSyncedStorageStack().get(ModCoreDataComponents.LINKED_STORAGE_ENDPOINT);
+	}
+
+	@Override
+	public ILinkedStorageEndpointAdapter<ILinkedStorageBlockEndpoint> getLinkedStorageBlockEndpointAdapter() {
+		return MountedLinkedStorageEndpointAdapter.INSTANCE;
 	}
 
 	public void setLocalPos(BlockPos localPos) {
@@ -127,14 +148,15 @@ public class MountedStorageHolder extends StorageHolderBase {
 	@Override
 	public void tick(Entity entity) {
 		Level level = getLevel();
-		if (level instanceof ServerLevel) {
-			sendStorageUpdatePayload();
-		} else if (refreshRendersOnNextTick && level != null && level.isClientSide() && getRenderBlockEntity() != null
+		if (refreshRendersOnNextTick && level != null && level.isClientSide() && getRenderBlockEntity() != null
 				&& entity instanceof AbstractContraptionEntity contraptionEntity) {
 			refreshRenders(contraptionEntity, true);
 			refreshRendersOnNextTick = false;
 		}
 		super.tick(entity);
+		if (level instanceof ServerLevel) {
+			sendStorageUpdatePayload();
+		}
 	}
 
 	public void sendStorageUpdatePayload() {
@@ -216,23 +238,9 @@ public class MountedStorageHolder extends StorageHolderBase {
 
 	@Override
 	protected void openMenu(Player player) {
-		@Nullable
-		Entity e = getEntity();
-		if (e == null) {
-			return;
-		}
-		player.openMenu(new SophisticatedMenuProvider((w, p, pl) -> createMenu(w, pl, e.getId(), localPos), getSyncedStorageStack().getHoverName(), false),
-				buffer -> {
-					buffer.writeInt(e.getId());
-					buffer.writeBlockPos(localPos);
-				});
-	}
-
-	private MountedStorageContainerMenuBase createMenu(int id, Player pl, int contraptionEntityId, BlockPos localPos) {
-		if (MovingStorageWrapper.isLimitedBarrel(getSyncedStorageStack())) {
-			return new MountedLimitedBarrelContainerMenu(id, pl, contraptionEntityId, localPos);
-		} else {
-			return new MountedStorageContainerMenu(id, pl, contraptionEntityId, localPos);
+		if (player instanceof ServerPlayer serverPlayer && getEntity() instanceof AbstractContraptionEntity entity
+				&& ContraptionHelper.getMountedStorage(entity, localPos) instanceof MountedSophisticatedStorage storage) {
+			storage.openMenu(serverPlayer, entity.getId(), localPos);
 		}
 	}
 
