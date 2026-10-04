@@ -8,6 +8,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.p3pp3rf1y.sophisticatedcore.api.IStorageWrapper;
 import net.p3pp3rf1y.sophisticatedcore.compat.create.*;
@@ -15,17 +16,26 @@ import net.p3pp3rf1y.sophisticatedcore.compat.create.ContraptionHelper;
 import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageContentsMessage;
 import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageData;
 import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageSettingsContainerMenuBase;
+import net.p3pp3rf1y.sophisticatedcore.linkedstorage.ClientLinkedStorageContents;
+import net.p3pp3rf1y.sophisticatedcore.linkedstorage.LinkedStorageEndpointData;
+import net.p3pp3rf1y.sophisticatedcore.linkedstorage.LinkedStorageStackData;
+import net.p3pp3rf1y.sophisticatedcore.network.LinkedStorageSettingsMessage;
 import net.p3pp3rf1y.sophisticatedcore.network.PacketHandler;
 import net.p3pp3rf1y.sophisticatedcore.util.NoopStorageWrapper;
 import net.p3pp3rf1y.sophisticatedstorage.entity.MovingStorageWrapper;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.init.ModContent;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.storage.MountedSophisticatedStorage;
 
+import java.util.Objects;
 import java.util.UUID;
 
 @SuppressWarnings("PMD.UnnecessaryImport")
 public class MountedStorageSettingsContainerMenu extends MountedStorageSettingsContainerMenuBase {
 	private final boolean doubleChest;
+	private final LinkedStorageEndpointData openedEndpoint;
+	private final Object openedItem;
+	private final IStorageWrapper openedWrapper;
+	private CompoundTag lastLinkedSettingsNbt;
 
 	protected MountedStorageSettingsContainerMenu(int windowId, Player player, int contraptionEntityId, BlockPos localPos) {
 		this(ModContent.MOUNTED_STORAGE_SETTINGS_CONTAINER_TYPE.get(), windowId, player, contraptionEntityId, localPos);
@@ -39,6 +49,61 @@ public class MountedStorageSettingsContainerMenu extends MountedStorageSettingsC
 		} else {
 			doubleChest = false;
 		}
+		MountedSophisticatedStorage storage = getStorage(player.level(), contraptionEntityId, localPos);
+		openedEndpoint = storage == null ? null : LinkedStorageStackData.getEndpoint(storage.getStorageStack());
+		openedItem = storage == null ? null : storage.getStorageStack().getItem();
+		openedWrapper = storageWrapper;
+	}
+
+	private static MountedSophisticatedStorage getStorage(Level level, int entityId, BlockPos localPos) {
+		if (level.getEntity(entityId) instanceof AbstractContraptionEntity entity
+				&& ContraptionHelper.getMountedStorage(entity, localPos) instanceof MountedSophisticatedStorage storage) {
+			return storage;
+		}
+		return null;
+	}
+
+	@Override
+	public boolean stillValid(Player player) {
+		MountedSophisticatedStorage storage = getStorage(player.level(), getContraptionEntityId(), getLocalPos());
+		return storage != null && player.level().getEntity(getContraptionEntityId()) instanceof AbstractContraptionEntity entity && entity.isAlive()
+				&& player.canReach(entity, 4.0D) && openedItem == storage.getStorageStack().getItem()
+				&& Objects.equals(openedEndpoint, LinkedStorageStackData.getEndpoint(storage.getStorageStack()))
+				&& openedWrapper == storage.getStorageWrapper();
+	}
+
+	@Override
+	public void detectSettingsChangeAndReload() {
+		if (openedEndpoint != null && player.level().isClientSide) {
+			boolean snapshotChanged = ClientLinkedStorageContents.removeUpdatedGroup(openedEndpoint.groupId());
+			boolean settingsChanged = ClientLinkedStorageContents.removeUpdatedSettings(openedEndpoint.groupId());
+			if (snapshotChanged || settingsChanged) {
+				ClientLinkedStorageContents.getContents(openedEndpoint.groupId()).ifPresent(contents -> {
+					MountedSophisticatedStorage storage = getStorage(player.level(), getContraptionEntityId(), getLocalPos());
+					if (snapshotChanged && storage != null) {
+						storage.getStorageHolder().refreshClientLinkedStorage();
+					}
+					storageWrapper.getSettingsHandler().reloadFrom(contents.getContents().getCompound("settings"));
+				});
+			}
+			return;
+		}
+		super.detectSettingsChangeAndReload();
+	}
+
+	@Override
+	protected void sendStorageSettingsToClient() {
+		if (openedEndpoint != null) {
+			CompoundTag settings = storageWrapper.getSettingsHandler().getNbt();
+			if (lastLinkedSettingsNbt == null || !lastLinkedSettingsNbt.equals(settings)) {
+				lastLinkedSettingsNbt = settings.copy();
+				if (player instanceof ServerPlayer serverPlayer && stillValid(player)) {
+					PacketHandler.INSTANCE.sendToClient(serverPlayer, new LinkedStorageSettingsMessage(openedEndpoint.groupId(), lastLinkedSettingsNbt));
+				}
+			}
+			return;
+		}
+		super.sendStorageSettingsToClient();
 	}
 
 	private static IStorageWrapper getWrapper(Level level, int contraptionEntityId, BlockPos localPos) {
@@ -54,12 +119,19 @@ public class MountedStorageSettingsContainerMenu extends MountedStorageSettingsC
 	}
 
 	@Override
+	public ItemStack getStorageSettingsTabIcon() {
+		MountedSophisticatedStorage storage = getStorage(player.level(), getContraptionEntityId(), getLocalPos());
+		return openedEndpoint != null && storage != null ? storage.getStorageStack() : super.getStorageSettingsTabIcon();
+	}
+
+	@Override
 	protected CompoundTag getSettingsTag(CompoundTag contents) {
 		return contents.getCompound(MovingStorageWrapper.SETTINGS_TAG);
 	}
 
 	public static MountedStorageSettingsContainerMenu fromBuffer(int windowId, Inventory playerInventory, FriendlyByteBuf buffer) {
-		return new MountedStorageSettingsContainerMenu(windowId, playerInventory.player, buffer.readInt(), buffer.readBlockPos());
+		MountedLinkedStorageMenuData.Position position = MountedLinkedStorageMenuData.read(buffer, playerInventory.player);
+		return new MountedStorageSettingsContainerMenu(windowId, playerInventory.player, position.entityId(), position.localPos());
 	}
 
 	@Override
