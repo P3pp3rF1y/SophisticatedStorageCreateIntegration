@@ -3,6 +3,7 @@ package net.p3pp3rf1y.sophisticatedstoragecreateintegration.storage;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
 import com.mojang.serialization.MapCodec;
+import com.simibubi.create.content.contraptions.AbstractContraptionEntity;
 import com.simibubi.create.content.contraptions.Contraption;
 import com.simibubi.create.content.contraptions.behaviour.MovementContext;
 import net.minecraft.core.BlockPos;
@@ -17,6 +18,8 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
@@ -37,16 +40,23 @@ import net.neoforged.neoforge.items.IItemHandlerModifiable;
 import net.p3pp3rf1y.sophisticatedcore.api.IStorageWrapper;
 import net.p3pp3rf1y.sophisticatedcore.common.gui.SophisticatedMenuProvider;
 import net.p3pp3rf1y.sophisticatedcore.common.gui.SortBy;
+import net.p3pp3rf1y.sophisticatedcore.compat.create.ContraptionHelper;
 import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageBase;
 import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageContainerMenuBase;
 import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageData;
 import net.p3pp3rf1y.sophisticatedcore.init.ModCoreDataComponents;
+import net.p3pp3rf1y.sophisticatedcore.linkedstorage.EnderLinkerItem;
+import net.p3pp3rf1y.sophisticatedcore.linkedstorage.LinkedStorageEndpointData;
+import net.p3pp3rf1y.sophisticatedcore.linkedstorage.LinkedStorageGroupsSavedData;
+import net.p3pp3rf1y.sophisticatedcore.linkedstorage.LinkedStorageService;
 import net.p3pp3rf1y.sophisticatedcore.settings.itemdisplay.ItemDisplaySettingsCategory;
 import net.p3pp3rf1y.sophisticatedcore.upgrades.UpgradeItemBase;
 import net.p3pp3rf1y.sophisticatedcore.util.NBTHelper;
 import net.p3pp3rf1y.sophisticatedcore.util.NoopStorageWrapper;
 import net.p3pp3rf1y.sophisticatedcore.util.WorldHelper;
+import net.p3pp3rf1y.sophisticatedstorage.Config;
 import net.p3pp3rf1y.sophisticatedstorage.block.*;
+import net.p3pp3rf1y.sophisticatedstorage.client.gui.StorageTranslationHelper;
 import net.p3pp3rf1y.sophisticatedstorage.entity.MovingStorageWrapper;
 import net.p3pp3rf1y.sophisticatedstorage.entity.StorageHolderTierUpgradeHandler;
 import net.p3pp3rf1y.sophisticatedstorage.entity.StorageHolderToolHandler;
@@ -54,6 +64,7 @@ import net.p3pp3rf1y.sophisticatedstorage.init.ModDataComponents;
 import net.p3pp3rf1y.sophisticatedstorage.init.ModItems;
 import net.p3pp3rf1y.sophisticatedstorage.item.*;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.common.MountedLimitedBarrelContainerMenu;
+import net.p3pp3rf1y.sophisticatedstoragecreateintegration.common.MountedLinkedStorageMenuData;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.common.MountedStorageContainerMenu;
 import net.p3pp3rf1y.sophisticatedstoragecreateintegration.init.ModContent;
 
@@ -129,6 +140,10 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 
 		StorageWrapper storageWrapper = storage.getStorageWrapper();
 		ItemStack storageItem = storageWrapper.getWrappedStorageStack();
+		boolean linkedStorage = storage.isLinkedStorage();
+		if (linkedStorage) {
+			storage.copyLinkedStorageEndpointTo(storageItem);
+		}
 		if (storageItem.getItem() instanceof ITintableBlockItem tintableBlockItem) {
 			if (storageWrapper.getMainColor() != -1) {
 				tintableBlockItem.setMainColor(storageItem, storageWrapper.getMainColor());
@@ -153,7 +168,7 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 		storageItem.set(ModCoreDataComponents.NUMBER_OF_INVENTORY_SLOTS, storageWrapperNbt.getInt(StorageWrapper.NUMBER_OF_INVENTORY_SLOTS_TAG));
 		storageItem.set(ModCoreDataComponents.NUMBER_OF_UPGRADE_SLOTS, storageWrapperNbt.getInt(StorageWrapper.NUMBER_OF_UPGRADE_SLOTS_TAG));
 
-		if (!rightChestPart) {
+		if (!rightChestPart && !linkedStorage) {
 			UUID id = UUID.randomUUID();
 			storageItem.set(ModCoreDataComponents.STORAGE_UUID, id);
 			MountedStorageData.get(id).setContents(contentsNbt);
@@ -201,6 +216,24 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 
 	@Override
 	public void unmount(Level level, BlockState state, BlockPos pos, @Nullable BlockEntity be) {
+		if (getStorageStack().has(ModCoreDataComponents.LINKED_STORAGE_ENDPOINT) && be instanceof StorageBlockEntity storageBe
+				&& level instanceof ServerLevel serverLevel) {
+			CompoundTag appearanceNbt = new CompoundTag();
+			for (Map.Entry<Class<? extends Item>, NbtToComponentMapper<?>> entry : NBT_TO_COMPONENT_MAPPERS.entries()) {
+				if (entry.getKey().isInstance(getStorageStack().getItem())) {
+					setNbtValueFromComponent(appearanceNbt, entry.getValue(), getStorageStack(), level);
+				}
+			}
+			storageBe.loadSynchronizedData(appearanceNbt, level.registryAccess());
+			if (getStorageStack().getItem() instanceof ITintableBlockItem tintableBlockItem) {
+				storageBe.getStorageWrapper().setColors(tintableBlockItem.getMainColor(getStorageStack()).orElse(-1),
+						tintableBlockItem.getAccentColor(getStorageStack()).orElse(-1));
+			}
+			storageBe.restoreLinkedStorageEndpoint(serverLevel, getStorageStack());
+			storageBe.getStorageWrapper().onInit(level);
+			storageBe.tryToAddToController();
+			return;
+		}
 		if (getStorageStack().has(ModCoreDataComponents.STORAGE_UUID) && be instanceof StorageBlockEntity storageBe) {
 			UUID storageUuid = getStorageStack().get(ModCoreDataComponents.STORAGE_UUID);
 
@@ -297,6 +330,24 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 
 		int contraptionEntityId = contraption.entity.getId();
 		ItemStack itemInHand = player.getMainHandItem();
+		if (itemInHand.getItem() instanceof PackingTapeItem
+				&& ContraptionHelper.getMountedStorage(contraption.entity, localPos) instanceof MountedSophisticatedStorage mainStorage
+				&& mainStorage.getStorageHolder().isLinkedStorage()) {
+			if (Config.COMMON.dropPacked.get()) {
+				player.displayClientMessage(Component.translatable("gui.sophisticatedstorage.status.packing_tape_disabled"), true);
+			} else {
+				player.playNotifySound(SoundEvents.NOTE_BLOCK_BASS.value(), SoundSource.PLAYERS, 1, 0.7F);
+				player.displayClientMessage(StorageTranslationHelper.INSTANCE.translStatusMessage("packing_tape_linked_storage"), true);
+			}
+			return true;
+		}
+		if (itemInHand.getItem() instanceof EnderLinkerItem) {
+			if (!(ContraptionHelper.getMountedStorage(contraption.entity, localPos) instanceof MountedSophisticatedStorage mainStorage)) {
+				return false;
+			}
+			return EnderLinkerItem.tryLinkInteractionTarget(player, itemInHand, mainStorage.getStorageHolder(), contraption.entity.blockPosition())
+					.map(result -> result == LinkedStorageService.LinkResult.SUCCESS).orElse(false);
+		}
 		if (itemInHand.getItem() instanceof StorageTierUpgradeItem tierUpgradeItem) {
 			InteractionResult result = tryStorageTierUpgrade(player, itemInHand, tierUpgradeItem);
 			if (result != InteractionResult.PASS) {
@@ -351,17 +402,23 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 	}
 
 	private InteractionResult tryStorageTierUpgrade(ServerPlayer player, ItemStack itemInHand, StorageTierUpgradeItem tierUpgradeItem) {
-		InteractionResult result = StorageHolderTierUpgradeHandler.upgrade(player, getStorageHolder(), itemInHand, tierUpgradeItem);
+		MountedStorageHolder upgradeHolder = storageHolder.isDoubleChest() && storageHolder.getMainStorageHolder() instanceof MountedStorageHolder mainHolder
+				? mainHolder
+				: storageHolder;
+		InteractionResult result = StorageHolderTierUpgradeHandler.upgrade(player, upgradeHolder, itemInHand, tierUpgradeItem);
 
 		if (result == InteractionResult.SUCCESS) {
-			if (getStorageStack().getItem() instanceof ChestBlockItem && ChestBlockItem.isDoubleChest(getStorageStack())) {
-				if (storageHolder.getMainStorageHolder() instanceof MountedStorageHolder mainStorageHolder) {
-					mainStorageHolder.updateState();
-				}
-				storageHolder.getAuxiliaryStorageHolder().filter(MountedStorageHolder.class::isInstance).map(MountedStorageHolder.class::cast)
-						.ifPresent(MountedStorageHolder::updateState);
+			if (upgradeHolder.isDoubleChest()) {
+				upgradeHolder.updateState();
+				upgradeHolder.updateClientBlockRenderAfterNextSync();
+				upgradeHolder.getAuxiliaryStorageHolder().filter(MountedStorageHolder.class::isInstance).map(MountedStorageHolder.class::cast)
+						.ifPresent(auxiliaryHolder -> {
+							auxiliaryHolder.updateState();
+							auxiliaryHolder.updateClientBlockRenderAfterNextSync();
+						});
 			} else {
 				storageHolder.updateState();
+				storageHolder.updateClientBlockRenderAfterNextSync();
 			}
 			return InteractionResult.SUCCESS;
 		}
@@ -387,6 +444,10 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 
 	@Override
 	public void onContraptionDestroyed() {
+		if (storageHolder.getEntity() != null && storageHolder.getEntity().level() instanceof ServerLevel level
+				&& getStorageStack().get(ModCoreDataComponents.LINKED_STORAGE_ENDPOINT) instanceof LinkedStorageEndpointData endpoint) {
+			LinkedStorageGroupsSavedData.get(level).manager().detachLostEndpoint(endpoint.groupId(), endpoint.endpointId());
+		}
 		if (getStorageStack().has(ModCoreDataComponents.STORAGE_UUID)) {
 			MountedStorageData.get(getStorageStack().get(ModCoreDataComponents.STORAGE_UUID)).removeStorageContents();
 		}
@@ -401,11 +462,22 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 	}
 
 	public OptionalInt openMenu(ServerPlayer player, int contraptionEntityId, BlockPos localPos) {
-		return player.openMenu(
-				new SophisticatedMenuProvider((w, p, pl) -> createMenu(w, pl, contraptionEntityId, localPos), getStorageStack().getHoverName(), false),
-				buffer -> {
+		if (!(player.level().getEntity(contraptionEntityId) instanceof AbstractContraptionEntity entity)) {
+			return OptionalInt.empty();
+		}
+		StructureTemplate.StructureBlockInfo blockInfo = entity.getContraption().getBlocks().get(localPos);
+		if (blockInfo != null && blockInfo.state().getBlock() instanceof ChestBlock && blockInfo.state().getValue(ChestBlock.TYPE) == ChestType.LEFT) {
+			localPos = localPos.relative(ChestBlock.getConnectedDirection(blockInfo.state()));
+		}
+		if (!(ContraptionHelper.getMountedStorage(entity, localPos) instanceof MountedSophisticatedStorage mainStorage)) {
+			return OptionalInt.empty();
+		}
+		BlockPos menuPos = localPos;
+		return player.openMenu(new SophisticatedMenuProvider((w, p, pl) -> mainStorage.createMenu(w, pl, contraptionEntityId, menuPos),
+				mainStorage.getStorageHolder().getMenuDisplayName(mainStorage.getStorageStack().getHoverName()), false), buffer -> {
 					buffer.writeInt(contraptionEntityId);
-					buffer.writeBlockPos(localPos);
+					buffer.writeBlockPos(menuPos);
+					MountedLinkedStorageMenuData.write(buffer, player, mainStorage);
 				});
 	}
 
