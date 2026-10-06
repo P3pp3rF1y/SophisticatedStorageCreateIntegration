@@ -80,8 +80,8 @@ public final class MountedLinkedStorageMenuData {
 				&& ContraptionHelper.getMountedStorage(entity, localPos) instanceof MountedSophisticatedStorage storage
 				&& storage.getStorageStack().get(ModCoreDataComponents.LINKED_STORAGE_ENDPOINT) instanceof LinkedStorageEndpointData endpoint
 				&& groupId.equals(endpoint.groupId())) {
-			ClientLinkedStorageContents.getContents(groupId)
-					.ifPresent(snapshot -> storage.getStorageHolder().bindClientLinkedStorage(StorageLinkedStorageHostWrapper.create(snapshot, profiledCarrier)));
+			ClientLinkedStorageContents.getContents(groupId).ifPresent(
+					snapshot -> storage.getStorageHolder().bindClientLinkedStorage(StorageLinkedStorageHostWrapper.create(snapshot, profiledCarrier)));
 			ClientLinkedStorageContents.removeUpdatedGroup(groupId);
 		}
 		return new Position(entityId, localPos);
