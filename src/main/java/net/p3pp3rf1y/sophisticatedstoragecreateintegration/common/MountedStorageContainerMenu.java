@@ -37,6 +37,11 @@ import java.util.Optional;
 import java.util.UUID;
 
 public class MountedStorageContainerMenu extends MountedStorageContainerMenuBase implements ISyncedContainer {
+	@Override
+	public Optional<UUID> getLinkedStorageGroupId() {
+		return Optional.ofNullable(openedEndpoint).map(LinkedStorageEndpointData::groupId);
+	}
+
 	public Optional<LinkedStorageEndpointRole> getInstalledLinkedStorageEndpointRole() {
 		return getMountedStorage().flatMap(storage -> StorageBlockEntity.getLinkedStorageEndpointRole(storage.getStorageStack()));
 	}
@@ -88,7 +93,7 @@ public class MountedStorageContainerMenu extends MountedStorageContainerMenuBase
 				if (snapshotChanged && mountedStorage instanceof MountedSophisticatedStorage storage) {
 					storage.getStorageHolder().refreshClientLinkedStorage();
 				}
-				storageWrapper.getSettingsHandler().reloadFrom(contents.getContents().getCompound("settings"));
+				storageWrapper.getSettingsHandler().reloadFromStorageContents(contents.getContents());
 				if (snapshotChanged) {
 					refreshUpgradeControls();
 				}
