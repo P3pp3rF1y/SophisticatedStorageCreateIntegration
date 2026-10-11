@@ -34,6 +34,11 @@ import java.util.Optional;
 import java.util.UUID;
 
 public class MountedStorageContainerMenu extends MountedStorageContainerMenuBase implements ISyncedContainer {
+	@Override
+	public Optional<UUID> getLinkedStorageGroupId() {
+		return Optional.ofNullable(openedEndpoint).map(LinkedStorageEndpointData::groupId);
+	}
+
 	private final LinkedStorageEndpointData openedEndpoint;
 	private final Object openedItem;
 	private final IStorageWrapper openedWrapper;
