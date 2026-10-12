@@ -45,6 +45,10 @@ public class MountedStorageContainerMenu extends MountedStorageContainerMenuBase
 		return getMountedStorage().flatMap(storage -> StorageBlockEntity.getLinkedStorageEndpointRole(storage.getStorageStack()));
 	}
 
+	public Optional<UUID> getLinkedStorageGroupId() {
+		return Optional.ofNullable(openedEndpoint).map(LinkedStorageEndpointData::groupId);
+	}
+
 	public MountedStorageContainerMenu(int containerId, Player player, int contraptionEntityId, BlockPos localPos) {
 		this(ModContent.MOUNTED_STORAGE_CONTAINER_TYPE.get(), containerId, player, contraptionEntityId, localPos);
 	}
@@ -87,7 +91,7 @@ public class MountedStorageContainerMenu extends MountedStorageContainerMenuBase
 				if (snapshotChanged && mountedStorage instanceof MountedSophisticatedStorage storage) {
 					storage.getStorageHolder().refreshClientLinkedStorage();
 				}
-				storageWrapper.getSettingsHandler().reloadFrom(contents.getContents().getCompound("settings"));
+				storageWrapper.getSettingsHandler().reloadFromStorageContents(contents.getContents());
 				if (snapshotChanged) {
 					refreshUpgradeControls();
 				}

@@ -83,7 +83,7 @@ public class MountedStorageSettingsContainerMenu extends MountedStorageSettingsC
 					if (snapshotChanged && storage != null) {
 						storage.getStorageHolder().refreshClientLinkedStorage();
 					}
-					storageWrapper.getSettingsHandler().reloadFrom(contents.getContents().getCompound("settings"));
+					storageWrapper.getSettingsHandler().reloadFromStorageContents(contents.getContents());
 				});
 			}
 			return;
