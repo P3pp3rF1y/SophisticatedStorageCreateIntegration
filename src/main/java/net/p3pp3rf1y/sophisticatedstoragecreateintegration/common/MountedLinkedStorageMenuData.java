@@ -9,6 +9,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
+import net.p3pp3rf1y.sophisticatedcore.common.gui.SortBy;
 import net.p3pp3rf1y.sophisticatedcore.compat.create.ContraptionHelper;
 import net.p3pp3rf1y.sophisticatedcore.init.ModCoreDataComponents;
 import net.p3pp3rf1y.sophisticatedcore.inventory.ContainerContents;
@@ -49,6 +50,7 @@ public final class MountedLinkedStorageMenuData {
 		buffer.writeVarInt(host.get().getInventoryHandler().size());
 		buffer.writeVarInt(host.get().getUpgradeHandler().size());
 		buffer.writeVarInt(host.get().getColumnsTaken());
+		buffer.writeEnum(host.get().getSortBy());
 		buffer.writeNbt(host.get().getVirtualCarrierSnapshot().orElseThrow());
 	}
 
@@ -70,11 +72,12 @@ public final class MountedLinkedStorageMenuData {
 		int inventorySlots = buffer.readVarInt();
 		int upgradeSlots = buffer.readVarInt();
 		int columnsTaken = buffer.readVarInt();
+		SortBy sortBy = buffer.readEnum(SortBy.class);
 		CompoundTag carrier = buffer.readNbt();
 		if (carrier == null) {
 			return new Position(entityId, localPos);
 		}
-		ClientLinkedStorageContents.updateContents(groupId, revision, contents, name, inventorySlots, upgradeSlots, columnsTaken);
+		ClientLinkedStorageContents.updateContents(groupId, revision, contents, name, inventorySlots, upgradeSlots, columnsTaken, sortBy);
 		CompoundTag profiledCarrier = StorageLinkedStorageHostWrapper.applyClientSnapshotProfile(carrier, name, inventorySlots, upgradeSlots);
 		if (player.level().getEntity(entityId) instanceof AbstractContraptionEntity entity
 				&& ContraptionHelper.getMountedStorage(entity, localPos) instanceof MountedSophisticatedStorage storage
