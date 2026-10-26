@@ -5,6 +5,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.transfer.ResourceHandlerUtil;
 import net.p3pp3rf1y.sophisticatedcore.api.IStorageWrapper;
+import net.p3pp3rf1y.sophisticatedcore.common.gui.SortBy;
 import net.p3pp3rf1y.sophisticatedcore.compat.create.MountedStorageData;
 import net.p3pp3rf1y.sophisticatedcore.init.ModCoreDataComponents;
 import net.p3pp3rf1y.sophisticatedcore.inventory.ContainerContents;
@@ -49,6 +50,11 @@ public final class MountedLinkedStorageEndpointAdapter implements ILinkedStorage
 		MountedStorageHolder holder = requireHolder(endpoint);
 		UUID uuid = holder.getInstalledStorageItem().get(ModCoreDataComponents.STORAGE_UUID);
 		return uuid == null ? new ContainerContents() : MountedStorageData.get().getContents(uuid).copy();
+	}
+
+	@Override
+	public SortBy getSortBy(ServerLevel level, ILinkedStorageBlockEndpoint endpoint) {
+		return requireHolder(endpoint).getStorageWrapper().getSortBy();
 	}
 
 	@Override
