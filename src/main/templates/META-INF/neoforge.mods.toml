@@ -14,6 +14,10 @@ credits="${mod_credits}"
 authors="${mod_authors}"
 description='''${mod_description}'''
 
+[[mixins]]
+config = "sophisticatedstoragecreateintegration.mixins.json"
+requiredMods = ["create"]
+
 [[dependencies.${mod_id}]]
 modId="sophisticatedstorage"
 type="required"
