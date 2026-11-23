@@ -73,7 +73,7 @@ import java.util.function.Supplier;
 
 @SuppressWarnings("PMD.UnnecessaryImport")
 public class MountedSophisticatedStorage extends MountedStorageBase {
-	public static final Codec<MountedSophisticatedStorage> CODEC = ItemStack.CODEC.xmap(MountedSophisticatedStorage::new,
+	public static final Codec<MountedSophisticatedStorage> CODEC = ItemStack.CODEC.xmap(MountedSophisticatedStorage::fromStorageStack,
 			MountedSophisticatedStorage::getStorageStack);
 	protected static final Multimap<Class<? extends Item>, String> NBT_TO_TRANSFER = LinkedListMultimap.create();
 
@@ -100,6 +100,12 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 	public MountedSophisticatedStorage(ItemStack storageStack) {
 		super(ModContent.SOPHISTICATED_MOUNTED_STORAGE_TYPE.get(), storageStack);
 		storageHolder = new MountedStorageHolder(this::getStorageStack, this::setStorageStack);
+	}
+
+	private static MountedSophisticatedStorage fromStorageStack(ItemStack storageStack) {
+		MountedSophisticatedStorage mountedStorage = new MountedSophisticatedStorage(storageStack);
+		MountedStorageReadContext.getServerLevel().ifPresent(mountedStorage::bootstrapLinkedStorageLevel);
+		return mountedStorage;
 	}
 
 	@Override
@@ -171,6 +177,9 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 		}
 
 		MountedSophisticatedStorage mountedStorage = new MountedSophisticatedStorage(storageItem);
+		if (level instanceof ServerLevel serverLevel) {
+			mountedStorage.bootstrapLinkedStorageLevel(serverLevel);
+		}
 		if (!level.isClientSide()) {
 			mountedStorage.getStorageHolder().setDirty();
 		}
@@ -391,6 +400,12 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 
 	public MountedStorageHolder getStorageHolder() {
 		return storageHolder;
+	}
+
+	public void bootstrapLinkedStorageLevel(ServerLevel level) {
+		if (LinkedStorageStackData.getEndpoint(getStorageStack()) != null) {
+			storageHolder.setLevel(level);
+		}
 	}
 
 	void initEntityLevelAndPositions(MovementContext context) {
