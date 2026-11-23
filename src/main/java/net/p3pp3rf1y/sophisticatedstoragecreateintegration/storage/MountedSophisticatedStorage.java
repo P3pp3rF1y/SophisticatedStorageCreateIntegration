@@ -75,7 +75,7 @@ import java.util.function.Supplier;
 
 public class MountedSophisticatedStorage extends MountedStorageBase {
 	public static final MapCodec<MountedSophisticatedStorage> CODEC = ItemStack.OPTIONAL_CODEC
-			.xmap(MountedSophisticatedStorage::new, MountedSophisticatedStorage::getStorageStack).fieldOf("value");
+			.xmap(MountedSophisticatedStorage::fromStorageStack, MountedSophisticatedStorage::getStorageStack).fieldOf("value");
 	protected static final Multimap<Class<? extends Item>, NbtToComponentMapper<?>> NBT_TO_COMPONENT_MAPPERS = LinkedListMultimap.create();
 
 	public static void registerNbtToComponentMapper(Class<? extends Item> itemClass, NbtToComponentMapper<?> mapper) {
@@ -123,6 +123,12 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 	public MountedSophisticatedStorage(ItemStack storageStack) {
 		super(ModContent.SOPHISTICATED_MOUNTED_STORAGE_TYPE.get(), storageStack);
 		storageHolder = new MountedStorageHolder(this::getStorageStack, this::setStorageStack);
+	}
+
+	private static MountedSophisticatedStorage fromStorageStack(ItemStack storageStack) {
+		MountedSophisticatedStorage mountedStorage = new MountedSophisticatedStorage(storageStack);
+		MountedStorageReadContext.getServerLevel().ifPresent(mountedStorage::bootstrapLinkedStorageLevel);
+		return mountedStorage;
 	}
 
 	@Override
@@ -193,6 +199,9 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 		}
 
 		MountedSophisticatedStorage mountedStorage = new MountedSophisticatedStorage(storageItem);
+		if (level instanceof ServerLevel serverLevel) {
+			mountedStorage.bootstrapLinkedStorageLevel(serverLevel);
+		}
 		if (!level.isClientSide()) {
 			mountedStorage.getStorageHolder().setDirty();
 		}
@@ -428,6 +437,12 @@ public class MountedSophisticatedStorage extends MountedStorageBase {
 
 	public MountedStorageHolder getStorageHolder() {
 		return storageHolder;
+	}
+
+	public void bootstrapLinkedStorageLevel(ServerLevel level) {
+		if (getStorageStack().has(ModCoreDataComponents.LINKED_STORAGE_ENDPOINT)) {
+			storageHolder.setLevel(level);
+		}
 	}
 
 	void initEntityLevelAndPositions(MovementContext context) {
